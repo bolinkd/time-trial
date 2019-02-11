@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/bolinkd/time-trial/db"
+	"github.com/bolinkd/time-trial/handlers"
+	"github.com/bolinkd/time-trial/middleware"
 	"github.com/braintree/manners"
-	"github.com/businessinstincts/traxone/handlers"
-	"github.com/businessinstincts/traxone/middleware"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
@@ -33,8 +34,6 @@ func main() {
 		return
 	}
 
-	setup.ConfigureLogging(log.StandardLogger())
-
 	err = db.RunMigrationOnDb(srv.Database)
 	if err != nil {
 		log.Fatal(err)
@@ -44,14 +43,10 @@ func main() {
 	boil.DebugMode = *sqlDebug
 
 	router.Use(
-		srv.AppNexusServiceHandler,
 		middleware.CORSMiddleware,
-		srv.OnspotServiceHandler,
-		srv.SocketServiceHandler,
 		srv.DbHandler,
 		middleware.RecoveryHandler,
-		middleware.LoggingMiddleware,
-		srv.PayTraceHandler,
+		// middleware.LoggingMiddleware,
 	)
 
 	router.GET("/", func(c *gin.Context) {
@@ -59,42 +54,12 @@ func main() {
 	})
 
 	v1 := router.Group("/v1")
-	v1.Use(
-		middleware.JWTSPAMiddleware,
-	)
-	machine := router.Group("/machine")
-	machine.Use(
-		middleware.JWTMachineMiddleware,
-	)
-	onspot := router.Group("/public/v1/onspot")
 
-	//COUNT
-	onspot.POST("/count", handlers.GetDeviceCountByGeoframe)
-	onspot.POST("/count/callback", handlers.GetDeviceCountByGeoframeCallback)
-
-	//USER
-	v1.GET("/users/:id", handlers.GetUserByID)
-	machine.POST("/users", handlers.CreateUser)
-	v1.POST("/users", handlers.CreateUser)
-	v1.GET("/users", handlers.GetUser)
-	v1.PUT("/users", handlers.UpdateUser)
-
-	//ORG
-	v1.GET("/organizations/:id", handlers.GetOrgByID)
-	v1.POST("/organizations", handlers.CreateOrg)
-	v1.GET("/organizations", handlers.GetOrgByUserID)
-	v1.PUT("/organizations", handlers.UpdateOrg)
-
-	//CAMPAIGN
-	v1.GET("/users/:id/campaigns", handlers.GetCampaignsByUserID)
-	v1.GET("/campaigns", handlers.GetCampaigns)
-	v1.GET("/campaigns/:id", handlers.GetCampaignByID)
-	v1.POST("/campaigns", handlers.CreateCampaign)
-	//v1.PUT("/campaigns", handlers.UpdateCampaign)
-
-	admin := v1.Group("/admin")
-	admin.PUT("/campaigns", handlers.UpdateCampaign)
-	admin.GET("/campaigns", handlers.GetAllCampaigns)
+	// TIME TRIAL
+	v1.GET("/time-trials/:id", handlers.GetTimeTrialById)
+	v1.POST("/time-trials", handlers.CreateTimeTrial)
+	v1.GET("/time-trials", handlers.GetTimeTrials)
+	v1.PUT("/time-trials", handlers.UpdateTimeTrial)
 
 	lp := fmt.Sprintf(":%s", *port)
 	log.WithField("message", fmt.Sprintf("Server Started On Port: %s", *port)).Info()

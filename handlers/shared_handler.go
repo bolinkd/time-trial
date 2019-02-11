@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"github.com/businessinstincts/traxone/service"
+	"github.com/bolinkd/time-trial/service"
 )
 
 var (
-	userService     service.UserServiceInterface         = &service.UserService{}
-	orgService      service.OrganizationServiceInterface = &service.OrganizationService{}
-	campaignService service.CampaignServiceInterface     = &service.CampaignService{}
+	timeTrialService service.TimeTrialServiceInterface = &service.TimeTrialService{}
 )

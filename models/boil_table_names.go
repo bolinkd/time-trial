@@ -5,8 +5,8 @@ package models
 
 var TableNames = struct {
 	Boat      string
-	Timetrial string
+	TimeTrial string
 }{
 	Boat:      "boat",
-	Timetrial: "timetrial",
+	TimeTrial: "time_trial",
 }

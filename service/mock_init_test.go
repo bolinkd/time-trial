@@ -5,7 +5,5 @@ import (
 )
 
 var (
-	DBMock       = mocks.NewDBMock()
-	PaytraceMock = mocks.NewPaytraceMock()
-	OnspotMock   = mocks.NewOnspotMock()
+	DBMock = mocks.NewDBMock()
 )

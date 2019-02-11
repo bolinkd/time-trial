@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/businessinstincts/traxone/db"
+	"github.com/bolinkd/time-trial/db"
 	"github.com/gin-gonic/gin"
 	"time"
 )

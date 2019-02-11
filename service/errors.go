@@ -6,7 +6,5 @@ import (
 )
 
 var (
-	ErrUserNotFound     domain.TraxError = errors.New("user not found")
-	ErrOrgNotFound      domain.TraxError = errors.New("organization not found")
-	ErrCampaignNotFound domain.TraxError = errors.New("campaign not found")
+	ErrTimeTrialNotFound domain.TraxError = errors.New("timetrial not found")
 )

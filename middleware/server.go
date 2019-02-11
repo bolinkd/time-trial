@@ -3,21 +3,13 @@ package middleware
 import (
 	"errors"
 	"fmt"
-	"github.com/businessinstincts/traxone/appnexus"
-	"github.com/businessinstincts/traxone/db"
-	"github.com/businessinstincts/traxone/onspot"
-	"github.com/businessinstincts/traxone/paytrace"
-	"github.com/businessinstincts/traxone/socket"
+	"github.com/bolinkd/time-trial/db"
 	"time"
 )
 
 // Server structure
 type Server struct {
 	Database *db.Connection
-	Onspot   *onspot.Client
-	Socket   *socket.Client
-	AppNexus *appnexus.Client
-	PayTrace *paytrace.Client
 }
 
 var (
@@ -40,20 +32,8 @@ func NewServer() (*Server, error) {
 		return nil, errors.New(err.Error())
 	}
 
-	onspotClient := onspot.New()
-	socketClient := socket.New()
-	appNexusClient := appnexus.New()
-	paytraceClient := paytrace.New()
-	if err != nil {
-		return nil, err
-	}
-
 	return &Server{
 		Database: &database,
-		Onspot:   &onspotClient,
-		Socket:   &socketClient,
-		AppNexus: &appNexusClient,
-		PayTrace: paytraceClient,
 	}, nil
 }
 

@@ -13,7 +13,7 @@ import (
 const (
 	defaultHost = "localhost"
 	defaultPort = "5432"
-	defaultDB   = "timetrial"
+	defaultDB   = "time_trial_db"
 	defaultUser = "postgres"
 	defaultPW   = "nopassword"
 )
@@ -24,7 +24,7 @@ type Connection struct {
 }
 
 type DatabaseInterface interface {
-	UserDBInterface
+	TimeTrialDBInterface
 	GetTransactor() (boil.Transactor, error)
 }
 

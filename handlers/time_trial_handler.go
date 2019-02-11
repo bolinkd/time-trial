@@ -3,136 +3,87 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"github.com/bolinkd/time-trial-service/middleware"
+	"github.com/bolinkd/time-trial/domain"
+	"github.com/bolinkd/time-trial/middleware"
+	"github.com/bolinkd/time-trial/service"
 	"github.com/gin-gonic/gin"
 	"strconv"
 )
 
 var ErrForbidden = errors.New("access forbidden")
 
+func GetTimeTrials(context *gin.Context) {
+	database := middleware.GetDatabase(context)
+
+	user, err := timeTrialService.GetTimeTrials(database)
+	if err == service.ErrTimeTrialNotFound {
+		NotFound(context, err)
+	} else if err != nil {
+		UnexpectedError(context, err)
+	} else {
+		Ok(context, user)
+	}
+}
+
 func GetTimeTrialById(context *gin.Context) {
 	database := middleware.GetDatabase(context)
-	userIDToken := middleware.GetUserID(context)
-	userID, err := strconv.Atoi(context.Param("id"))
+
+	timeTrialID, err := strconv.Atoi(context.Param("id"))
 	if err != nil {
-		BadRequest(context, fmt.Sprintf("invalid userID: %d", userID))
+		BadRequest(context, fmt.Sprintf("invalid userID: %d", timeTrialID))
 		return
 	}
 
-	err = CheckAuthorizationWithUserID(database, userID, userIDToken)
-	if err != nil {
-		if err == ErrForbidden {
-			Forbidden(context)
-		} else {
-			UnexpectedError(context, err)
-		}
-		return
-	}
-
-	user, err := userService.GetUserByID(database, userID)
-	if err == service.ErrUserNotFound {
+	timeTrial, err := timeTrialService.GetTimeTrialById(database, timeTrialID)
+	if err == service.ErrTimeTrialNotFound {
 		NotFound(context, err)
 	} else if err != nil {
 		UnexpectedError(context, err)
 	} else {
-		Ok(context, user)
+		Ok(context, timeTrial)
 	}
 }
 
-func GetUser(context *gin.Context) {
-	database := middleware.GetDatabase(context)
-	userID := middleware.GetUserID(context)
-
-	if userID == middleware.UserNotFound {
-		Forbidden(context)
-		return
-	}
-	user, err := userService.GetUserByID(database, userID)
-	if err == service.ErrUserNotFound {
-		NotFound(context, err)
-	} else if err != nil {
-		UnexpectedError(context, err)
-	} else {
-		Ok(context, user)
-	}
-}
-
-func CreateUser(context *gin.Context) {
+func CreateTimeTrial(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 
-	var userCreation domain.UserCreation
-	err := decodeAndValidate(context, &userCreation)
-	if err != nil {
-		BadRequest(context, err.Error())
-		return
-	}
-	//create org
-	tx, err := database.GetTransactor()
-	if err != nil {
-		UnexpectedError(context, err)
-		return
-	}
-
-	org, err := orgService.CreateOrg(database, userCreation.Organization, tx)
-	if err != nil {
-		UnexpectedError(context, err)
-		return
-	}
-
-	userCreation.User.OrgID = org.ID
-	//create user
-	user, err := userService.AddUser(database, userCreation.User, tx)
-	if err != nil {
-		if err == service.ErrOrgNotFound {
-			BadRequest(context, err.Error())
-		} else {
-			UnexpectedError(context, err)
-		}
-	} else {
-		if tx != nil {
-			err = tx.Commit()
-			if err != nil {
-				UnexpectedError(context, err)
-				return
-			}
-		}
-		Created(context, user)
-
-	}
-}
-
-func UpdateUser(context *gin.Context) {
-	database := middleware.GetDatabase(context)
-	userID := middleware.GetUserID(context)
-
-	var userD domain.Traxuser
-	err := decodeAndValidate(context, &userD)
+	var timeTrialD domain.TimeTrial
+	err := decodeAndValidate(context, &timeTrialD)
 	if err != nil {
 		BadRequest(context, err.Error())
 		return
 	}
 
-	err = CheckAuthorizationWithUserID(database, userD.ID, userID)
+	timeTrial, err := timeTrialService.CreateTimeTrial(database, timeTrialD, nil)
 	if err != nil {
-		if err == ErrForbidden {
-			Forbidden(context)
-		} else {
-			UnexpectedError(context, err)
-		}
-		return
-	}
-
-	user, err := userService.UpdateUser(database, userD)
-	if err != nil {
-		if err == service.ErrOrgNotFound {
+		if _, ok := err.(domain.TraxError); ok {
 			BadRequest(context, err.Error())
-		}
-		if err == service.ErrUserNotFound {
-			NotFound(context, err)
 		} else {
 			UnexpectedError(context, err)
 		}
 	} else {
-		Ok(context, user)
+		Created(context, timeTrial)
+	}
+}
+
+func UpdateTimeTrial(context *gin.Context) {
+	database := middleware.GetDatabase(context)
+
+	var timeTrialD domain.TimeTrial
+	err := decodeAndValidate(context, &timeTrialD)
+	if err != nil {
+		BadRequest(context, err.Error())
+		return
+	}
+
+	timeTrial, err := timeTrialService.UpdateTimeTrial(database, timeTrialD)
+	if err != nil {
+		if err == service.ErrTimeTrialNotFound {
+			BadRequest(context, err.Error())
+		} else {
+			UnexpectedError(context, err)
+		}
+	} else {
+		Ok(context, timeTrial)
 	}
 }

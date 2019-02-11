@@ -60,7 +60,7 @@ var BoatColumns = struct {
 
 // boatR is where relationships are stored.
 type boatR struct {
-	TimeTrial *Timetrial
+	TimeTrial *TimeTrial
 }
 
 // boatL is where Load methods for each relationship are stored.
@@ -350,20 +350,20 @@ func (q boatQuery) Exists() (bool, error) {
 }
 
 // TimeTrialG pointed to by the foreign key.
-func (o *Boat) TimeTrialG(mods ...qm.QueryMod) timetrialQuery {
+func (o *Boat) TimeTrialG(mods ...qm.QueryMod) timeTrialQuery {
 	return o.TimeTrial(boil.GetDB(), mods...)
 }
 
 // TimeTrial pointed to by the foreign key.
-func (o *Boat) TimeTrial(exec boil.Executor, mods ...qm.QueryMod) timetrialQuery {
+func (o *Boat) TimeTrial(exec boil.Executor, mods ...qm.QueryMod) timeTrialQuery {
 	queryMods := []qm.QueryMod{
 		qm.Where("id=?", o.TimeTrialID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := Timetrials(exec, queryMods...)
-	queries.SetFrom(query.Query, "\"timetrial\"")
+	query := TimeTrials(exec, queryMods...)
+	queries.SetFrom(query.Query, "\"time_trial\"")
 
 	return query
 } // LoadTimeTrial allows an eager lookup of values, cached into the
@@ -396,7 +396,7 @@ func (boatL) LoadTimeTrial(e boil.Executor, singular bool, maybeBoat interface{}
 	}
 
 	query := fmt.Sprintf(
-		"select * from \"timetrial\" where \"id\" in (%s)",
+		"select * from \"time_trial\" where \"id\" in (%s)",
 		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
 	)
 
@@ -406,13 +406,13 @@ func (boatL) LoadTimeTrial(e boil.Executor, singular bool, maybeBoat interface{}
 
 	results, err := e.Query(query, args...)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load Timetrial")
+		return errors.Wrap(err, "failed to eager load TimeTrial")
 	}
 	defer results.Close()
 
-	var resultSlice []*Timetrial
+	var resultSlice []*TimeTrial
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Timetrial")
+		return errors.Wrap(err, "failed to bind eager loaded slice TimeTrial")
 	}
 
 	if len(boatAfterSelectHooks) != 0 {
@@ -446,17 +446,17 @@ func (boatL) LoadTimeTrial(e boil.Executor, singular bool, maybeBoat interface{}
 
 // SetTimeTrialG of the boat to the related item.
 // Sets o.R.TimeTrial to related.
-// Adds o to related.R.TimeTrialBoats.
+// Adds o to related.R.Boats.
 // Uses the global database handle.
-func (o *Boat) SetTimeTrialG(insert bool, related *Timetrial) error {
+func (o *Boat) SetTimeTrialG(insert bool, related *TimeTrial) error {
 	return o.SetTimeTrial(boil.GetDB(), insert, related)
 }
 
 // SetTimeTrialP of the boat to the related item.
 // Sets o.R.TimeTrial to related.
-// Adds o to related.R.TimeTrialBoats.
+// Adds o to related.R.Boats.
 // Panics on error.
-func (o *Boat) SetTimeTrialP(exec boil.Executor, insert bool, related *Timetrial) {
+func (o *Boat) SetTimeTrialP(exec boil.Executor, insert bool, related *TimeTrial) {
 	if err := o.SetTimeTrial(exec, insert, related); err != nil {
 		panic(boil.WrapErr(err))
 	}
@@ -464,9 +464,9 @@ func (o *Boat) SetTimeTrialP(exec boil.Executor, insert bool, related *Timetrial
 
 // SetTimeTrialGP of the boat to the related item.
 // Sets o.R.TimeTrial to related.
-// Adds o to related.R.TimeTrialBoats.
+// Adds o to related.R.Boats.
 // Uses the global database handle and panics on error.
-func (o *Boat) SetTimeTrialGP(insert bool, related *Timetrial) {
+func (o *Boat) SetTimeTrialGP(insert bool, related *TimeTrial) {
 	if err := o.SetTimeTrial(boil.GetDB(), insert, related); err != nil {
 		panic(boil.WrapErr(err))
 	}
@@ -474,8 +474,8 @@ func (o *Boat) SetTimeTrialGP(insert bool, related *Timetrial) {
 
 // SetTimeTrial of the boat to the related item.
 // Sets o.R.TimeTrial to related.
-// Adds o to related.R.TimeTrialBoats.
-func (o *Boat) SetTimeTrial(exec boil.Executor, insert bool, related *Timetrial) error {
+// Adds o to related.R.Boats.
+func (o *Boat) SetTimeTrial(exec boil.Executor, insert bool, related *TimeTrial) error {
 	var err error
 	if insert {
 		if err = related.Insert(exec); err != nil {
@@ -511,11 +511,11 @@ func (o *Boat) SetTimeTrial(exec boil.Executor, insert bool, related *Timetrial)
 	}
 
 	if related.R == nil {
-		related.R = &timetrialR{
-			TimeTrialBoats: BoatSlice{o},
+		related.R = &timeTrialR{
+			Boats: BoatSlice{o},
 		}
 	} else {
-		related.R.TimeTrialBoats = append(related.R.TimeTrialBoats, o)
+		related.R.Boats = append(related.R.Boats, o)
 	}
 
 	return nil
@@ -525,7 +525,7 @@ func (o *Boat) SetTimeTrial(exec boil.Executor, insert bool, related *Timetrial)
 // Sets o.R.TimeTrial to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
 // Uses the global database handle.
-func (o *Boat) RemoveTimeTrialG(related *Timetrial) error {
+func (o *Boat) RemoveTimeTrialG(related *TimeTrial) error {
 	return o.RemoveTimeTrial(boil.GetDB(), related)
 }
 
@@ -533,7 +533,7 @@ func (o *Boat) RemoveTimeTrialG(related *Timetrial) error {
 // Sets o.R.TimeTrial to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
 // Panics on error.
-func (o *Boat) RemoveTimeTrialP(exec boil.Executor, related *Timetrial) {
+func (o *Boat) RemoveTimeTrialP(exec boil.Executor, related *TimeTrial) {
 	if err := o.RemoveTimeTrial(exec, related); err != nil {
 		panic(boil.WrapErr(err))
 	}
@@ -543,7 +543,7 @@ func (o *Boat) RemoveTimeTrialP(exec boil.Executor, related *Timetrial) {
 // Sets o.R.TimeTrial to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
 // Uses the global database handle and panics on error.
-func (o *Boat) RemoveTimeTrialGP(related *Timetrial) {
+func (o *Boat) RemoveTimeTrialGP(related *TimeTrial) {
 	if err := o.RemoveTimeTrial(boil.GetDB(), related); err != nil {
 		panic(boil.WrapErr(err))
 	}
@@ -552,7 +552,7 @@ func (o *Boat) RemoveTimeTrialGP(related *Timetrial) {
 // RemoveTimeTrial relationship.
 // Sets o.R.TimeTrial to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
-func (o *Boat) RemoveTimeTrial(exec boil.Executor, related *Timetrial) error {
+func (o *Boat) RemoveTimeTrial(exec boil.Executor, related *TimeTrial) error {
 	var err error
 
 	o.TimeTrialID.Valid = false
@@ -566,16 +566,16 @@ func (o *Boat) RemoveTimeTrial(exec boil.Executor, related *Timetrial) error {
 		return nil
 	}
 
-	for i, ri := range related.R.TimeTrialBoats {
+	for i, ri := range related.R.Boats {
 		if o.TimeTrialID.Int != ri.TimeTrialID.Int {
 			continue
 		}
 
-		ln := len(related.R.TimeTrialBoats)
+		ln := len(related.R.Boats)
 		if ln > 1 && i < ln-1 {
-			related.R.TimeTrialBoats[i] = related.R.TimeTrialBoats[ln-1]
+			related.R.Boats[i] = related.R.Boats[ln-1]
 		}
-		related.R.TimeTrialBoats = related.R.TimeTrialBoats[:ln-1]
+		related.R.Boats = related.R.Boats[:ln-1]
 		break
 	}
 	return nil
