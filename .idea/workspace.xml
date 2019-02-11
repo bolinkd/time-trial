@@ -2,51 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bf4e9f6b-5e5f-459b-a873-93218abc6e2c" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/TimeTrialService.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db/connection.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/connection.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db/dbconf.yml" beforeDir="false" afterPath="$PROJECT_DIR$/db/dbconf.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db/migration.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/migration.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/db/migrations/20181016164117_initialSetup.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/db/time_trial_db.go" beforeDir="false" afterPath="$PROJECT_DIR$/db/time_trial_db.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/campaign.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/campaign_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/geojson.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/geojson_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/organization.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/organization_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/response.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/response_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/user.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/user_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/shared_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/shared_handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/handlers/time_trial_handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/handlers/time_trial_handler.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/middleware/appnexus.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/middleware/db.go" beforeDir="false" afterPath="$PROJECT_DIR$/middleware/db.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/middleware/jwt-machine.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/middleware/jwt-spa.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/middleware/onspot.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/middleware/paytrace.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/middleware/server.go" beforeDir="false" afterPath="$PROJECT_DIR$/middleware/server.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/middleware/socket.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/boat.go" beforeDir="false" afterPath="$PROJECT_DIR$/models/boat.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/boil_table_names.go" beforeDir="false" afterPath="$PROJECT_DIR$/models/boil_table_names.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/timetrial.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/modext/campaign_ext.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/modext/campaign_ext_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/modext/org_ext.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/modext/org_ext_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/modext/user_ext.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/modext/user_ext_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/errors.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/errors.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/mock_init_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/mock_init_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/user_service.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/user_service_test.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sqlboiler.toml" beforeDir="false" afterPath="$PROJECT_DIR$/sqlboiler.toml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -69,7 +27,29 @@
     <select />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/main.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="407">
+              <caret line="36" column="26" selection-start-line="36" selection-start-column="26" selection-end-line="36" selection-end-column="26" />
+              <folding>
+                <element signature="e#14#328#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/db/migration.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="300">
+              <caret line="22" column="4" selection-start-line="22" selection-start-column="4" selection-end-line="22" selection-end-column="4" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -91,13 +71,11 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/main.go" />
         <option value="$PROJECT_DIR$/service/user_service.go" />
         <option value="$PROJECT_DIR$/db/time_trial_db.go" />
         <option value="$PROJECT_DIR$/db/migrations/20181016164117_initialSetup.sql" />
         <option value="$PROJECT_DIR$/Makefile" />
         <option value="$PROJECT_DIR$/db/dbconf.yml" />
-        <option value="$PROJECT_DIR$/db/migration.go" />
         <option value="$PROJECT_DIR$/db/connection.go" />
         <option value="$PROJECT_DIR$/sqlboiler.toml" />
         <option value="$PROJECT_DIR$/handlers/time_trial_handler.go" />
@@ -122,10 +100,12 @@
         <option value="$PROJECT_DIR$/../time-trial-service/db/dbconf.yml" />
         <option value="$PROJECT_DIR$/../time-trial-service/db/migration.go" />
         <option value="$PROJECT_DIR$/db/dbconf.yml" />
-        <option value="$PROJECT_DIR$/db/migration.go" />
         <option value="$PROJECT_DIR$/db/migrations/20181016164117_initialSetup.sql" />
         <option value="$PROJECT_DIR$/db/migrations/20190210175424_IntialSetup.sql" />
         <option value="$PROJECT_DIR$/../../../bitbucket.org/liamstask/goose/lib/goose/migrate.go" />
+        <option value="$PROJECT_DIR$/main.go" />
+        <option value="$PROJECT_DIR$/db/migration.go" />
+        <option value="$PROJECT_DIR$/db/migration.go" />
       </list>
     </option>
   </component>
@@ -138,8 +118,18 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="ProjectPane" />
       <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="time-trial" type="b2602c69:ProjectViewProjectNode" />
+              <item name="time-trial" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -208,13 +198,14 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2532189" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.26037195" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32891566" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.32891566" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -223,8 +214,8 @@
       <window_info anchor="bottom" id="Docker" order="8" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="9" />
       <window_info anchor="bottom" id="Database Changes" order="10" show_stripe_button="false" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.32891566" />
-      <window_info anchor="bottom" id="Event Log" order="12" side_tool="true" />
+      <window_info anchor="bottom" id="Terminal" order="11" sideWeight="0.4985694" weight="0.32891566" />
+      <window_info anchor="bottom" id="Event Log" order="12" sideWeight="0.50143063" side_tool="true" weight="0.32891566" />
       <window_info anchor="right" id="Commander" order="0" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -403,24 +394,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="10" column="4" selection-start-line="10" selection-start-column="4" selection-end-line="10" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/db/connection.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="435">
           <caret line="37" column="4" selection-start-line="37" selection-start-column="4" selection-end-line="37" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/db/migration.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="20" column="33" selection-start-line="20" selection-start-column="33" selection-end-line="20" selection-end-column="33" />
         </state>
       </provider>
     </entry>
@@ -449,6 +426,23 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="70">
           <caret line="35" column="38" selection-start-line="35" selection-start-column="38" selection-end-line="35" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="407">
+          <caret line="36" column="26" selection-start-line="36" selection-start-column="26" selection-end-line="36" selection-end-column="26" />
+          <folding>
+            <element signature="e#14#328#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/db/migration.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="300">
+          <caret line="22" column="4" selection-start-line="22" selection-start-column="4" selection-end-line="22" selection-end-column="4" />
         </state>
       </provider>
     </entry>

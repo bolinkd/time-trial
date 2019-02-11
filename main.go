@@ -56,10 +56,11 @@ func main() {
 	v1 := router.Group("/v1")
 
 	// TIME TRIAL
-	v1.GET("/time-trials/:id", handlers.GetTimeTrialById)
-	v1.POST("/time-trials", handlers.CreateTimeTrial)
 	v1.GET("/time-trials", handlers.GetTimeTrials)
+	v1.POST("/time-trials", handlers.CreateTimeTrial)
 	v1.PUT("/time-trials", handlers.UpdateTimeTrial)
+
+	v1.GET("/time-trials/:id", handlers.GetTimeTrialById)
 
 	lp := fmt.Sprintf(":%s", *port)
 	log.WithField("message", fmt.Sprintf("Server Started On Port: %s", *port)).Info()
