@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"github.com/businessinstincts/traxone/domain"
+	"github.com/bolinkd/time-trial/domain"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"io/ioutil"

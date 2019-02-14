@@ -3,7 +3,7 @@ package modext
 import (
 	"github.com/bolinkd/time-trial/domain"
 	"github.com/bolinkd/time-trial/models"
-	"gopkg.in/volatiletech/null.v6"
+	"github.com/volatiletech/null"
 )
 
 func ConvertTimeTrialsToDomain(timeTrials models.TimeTrialSlice) domain.TimeTrialSlice {

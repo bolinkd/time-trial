@@ -3,11 +3,11 @@ package db
 import (
 	"errors"
 	"fmt"
+	"github.com/bolinkd/time-trial/setup"
 	"github.com/volatiletech/sqlboiler/boil"
 	"log"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/level48/cafe-service/setup"
 )
 
 const (

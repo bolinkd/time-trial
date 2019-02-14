@@ -2,7 +2,7 @@ package domain
 
 import (
 	"errors"
-	"gopkg.in/volatiletech/null.v6"
+	"github.com/volatiletech/null"
 	"time"
 )
 

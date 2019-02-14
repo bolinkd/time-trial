@@ -57,7 +57,7 @@ func CreateBoat(context *gin.Context) {
 
 	boat, err := boatService.CreateBoat(database, boatD)
 	if err != nil {
-		if _, ok := err.(domain.TraxError); ok {
+		if _, ok := err.(domain.AppError); ok {
 			BadRequest(context, err.Error())
 		} else {
 			UnexpectedError(context, err)

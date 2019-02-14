@@ -29,6 +29,6 @@ func LoggingMiddleware(c *gin.Context) {
 		//complete handler call so that response code is set
 		c.Next()
 		fields["response_code"] = c.Writer.Status()
-		log.WithFields(fields).Info("client request - traxone-service")
+		log.WithFields(fields).Info("client request - time-trial-service")
 	}
 }

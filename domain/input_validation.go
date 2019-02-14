@@ -1,6 +1,6 @@
 package domain
 
-import "gopkg.in/volatiletech/null.v6"
+import "github.com/volatiletech/null"
 
 type InputValidation interface {
 	Validate() error

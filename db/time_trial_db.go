@@ -17,26 +17,27 @@ func (conn Connection) FindTimeTrials(tx boil.Executor) (models.TimeTrialSlice, 
 	if tx == nil {
 		tx = conn.DB
 	}
-	return models.TimeTrials(tx, qm.Load("Boats")).All()
+	return models.TimeTrials(qm.Load("Boats")).All(tx)
 }
 
 func (conn Connection) FindTimeTrialByID(id int, tx boil.Executor) (*models.TimeTrial, error) {
 	if tx == nil {
 		tx = conn.DB
 	}
-	return models.TimeTrials(tx, qm.Where("id = ?", id), qm.Load("Boats")).One()
+	return models.TimeTrials(qm.Where("id = ?", id), qm.Load("Boats")).One(tx)
 }
 
 func (conn Connection) AddTimeTrial(timeTrial *models.TimeTrial, tx boil.Executor) error {
 	if tx == nil {
 		tx = conn.DB
 	}
-	return timeTrial.Insert(tx)
+	return timeTrial.Insert(tx, boil.Infer())
 }
 
 func (conn Connection) UpdateTimeTrial(timeTrial *models.TimeTrial, tx boil.Executor) error {
 	if tx == nil {
 		tx = conn.DB
 	}
-	return timeTrial.Update(tx)
+	_, err := timeTrial.Update(tx, boil.Infer())
+	return err
 }

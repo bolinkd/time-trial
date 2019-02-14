@@ -1,0 +1,10 @@
+
+{
+  "name": "Time Trial: Go",
+  "description": "Time Trial Service",
+  "keywords": [
+    "go"
+  ],
+  "website": "http://github.com/bolinkd/time-trial",
+  "repository": "http://github.com/bolinkd/time-trial"
+}

@@ -4,20 +4,21 @@
 package models
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
+	"github.com/volatiletech/sqlboiler/queries/qmhelper"
 	"github.com/volatiletech/sqlboiler/strmangle"
-	"gopkg.in/volatiletech/null.v6"
 )
 
 // TimeTrial is an object representing the database table.
@@ -58,9 +59,68 @@ var TimeTrialColumns = struct {
 	UpdatedAt:    "updated_at",
 }
 
+// Generated where
+
+type whereHelpernull_Float64 struct{ field string }
+
+func (w whereHelpernull_Float64) EQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_Float64) NEQ(x null.Float64) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_Float64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Float64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_Float64) LT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_Float64) LTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_Float64) GT(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_Float64) GTE(x null.Float64) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+var TimeTrialWhere = struct {
+	ID           whereHelperint
+	Date         whereHelpertime_Time
+	StartTime    whereHelpernull_Time
+	EndTime      whereHelpernull_Time
+	TimingStatus whereHelpernull_Int
+	Timers       whereHelpernull_Int
+	Distance     whereHelpernull_Float64
+	CreatedAt    whereHelpertime_Time
+	UpdatedAt    whereHelpertime_Time
+}{
+	ID:           whereHelperint{field: `id`},
+	Date:         whereHelpertime_Time{field: `date`},
+	StartTime:    whereHelpernull_Time{field: `start_time`},
+	EndTime:      whereHelpernull_Time{field: `end_time`},
+	TimingStatus: whereHelpernull_Int{field: `timing_status`},
+	Timers:       whereHelpernull_Int{field: `timers`},
+	Distance:     whereHelpernull_Float64{field: `distance`},
+	CreatedAt:    whereHelpertime_Time{field: `created_at`},
+	UpdatedAt:    whereHelpertime_Time{field: `updated_at`},
+}
+
+// TimeTrialRels is where relationship names are stored.
+var TimeTrialRels = struct {
+	Boats string
+}{
+	Boats: "Boats",
+}
+
 // timeTrialR is where relationships are stored.
 type timeTrialR struct {
 	Boats BoatSlice
+}
+
+// NewStruct creates a new relationship struct
+func (*timeTrialR) NewStruct() *timeTrialR {
+	return &timeTrialR{}
 }
 
 // timeTrialL is where Load methods for each relationship are stored.
@@ -101,9 +161,11 @@ var (
 var (
 	// Force time package dependency for automated UpdatedAt/CreatedAt.
 	_ = time.Second
-	// Force bytes in case of primary key column that uses []byte (for relationship compares)
-	_ = bytes.MinRead
+	// Force qmhelper dependency for where clause generation (which doesn't
+	// always happen)
+	_ = qmhelper.Where
 )
+
 var timeTrialBeforeInsertHooks []TimeTrialHook
 var timeTrialBeforeUpdateHooks []TimeTrialHook
 var timeTrialBeforeDeleteHooks []TimeTrialHook
@@ -238,23 +300,18 @@ func AddTimeTrialHook(hookPoint boil.HookPoint, timeTrialHook TimeTrialHook) {
 	}
 }
 
-// OneP returns a single timeTrial record from the query, and panics on error.
-func (q timeTrialQuery) OneP() *TimeTrial {
-	o, err := q.One()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// OneG returns a single timeTrial record from the query using the global executor.
+func (q timeTrialQuery) OneG() (*TimeTrial, error) {
+	return q.One(boil.GetDB())
 }
 
 // One returns a single timeTrial record from the query.
-func (q timeTrialQuery) One() (*TimeTrial, error) {
+func (q timeTrialQuery) One(exec boil.Executor) (*TimeTrial, error) {
 	o := &TimeTrial{}
 
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Bind(o)
+	err := q.Bind(nil, exec, o)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -262,35 +319,30 @@ func (q timeTrialQuery) One() (*TimeTrial, error) {
 		return nil, errors.Wrap(err, "models: failed to execute a one query for time_trial")
 	}
 
-	if err := o.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+	if err := o.doAfterSelectHooks(exec); err != nil {
 		return o, err
 	}
 
 	return o, nil
 }
 
-// AllP returns all TimeTrial records from the query, and panics on error.
-func (q timeTrialQuery) AllP() TimeTrialSlice {
-	o, err := q.All()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return o
+// AllG returns all TimeTrial records from the query using the global executor.
+func (q timeTrialQuery) AllG() (TimeTrialSlice, error) {
+	return q.All(boil.GetDB())
 }
 
 // All returns all TimeTrial records from the query.
-func (q timeTrialQuery) All() (TimeTrialSlice, error) {
+func (q timeTrialQuery) All(exec boil.Executor) (TimeTrialSlice, error) {
 	var o []*TimeTrial
 
-	err := q.Bind(&o)
+	err := q.Bind(nil, exec, &o)
 	if err != nil {
 		return nil, errors.Wrap(err, "models: failed to assign all query results to TimeTrial slice")
 	}
 
 	if len(timeTrialAfterSelectHooks) != 0 {
 		for _, obj := range o {
-			if err := obj.doAfterSelectHooks(queries.GetExecutor(q.Query)); err != nil {
+			if err := obj.doAfterSelectHooks(exec); err != nil {
 				return o, err
 			}
 		}
@@ -299,24 +351,19 @@ func (q timeTrialQuery) All() (TimeTrialSlice, error) {
 	return o, nil
 }
 
-// CountP returns the count of all TimeTrial records in the query, and panics on error.
-func (q timeTrialQuery) CountP() int64 {
-	c, err := q.Count()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return c
+// CountG returns the count of all TimeTrial records in the query, and panics on error.
+func (q timeTrialQuery) CountG() (int64, error) {
+	return q.Count(boil.GetDB())
 }
 
 // Count returns the count of all TimeTrial records in the query.
-func (q timeTrialQuery) Count() (int64, error) {
+func (q timeTrialQuery) Count(exec boil.Executor) (int64, error) {
 	var count int64
 
 	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return 0, errors.Wrap(err, "models: failed to count time_trial rows")
 	}
@@ -324,24 +371,20 @@ func (q timeTrialQuery) Count() (int64, error) {
 	return count, nil
 }
 
-// Exists checks if the row exists in the table, and panics on error.
-func (q timeTrialQuery) ExistsP() bool {
-	e, err := q.Exists()
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
+// ExistsG checks if the row exists in the table, and panics on error.
+func (q timeTrialQuery) ExistsG() (bool, error) {
+	return q.Exists(boil.GetDB())
 }
 
 // Exists checks if the row exists in the table.
-func (q timeTrialQuery) Exists() (bool, error) {
+func (q timeTrialQuery) Exists(exec boil.Executor) (bool, error) {
 	var count int64
 
+	queries.SetSelect(q.Query, nil)
 	queries.SetCount(q.Query)
 	queries.SetLimit(q.Query, 1)
 
-	err := q.Query.QueryRow().Scan(&count)
+	err := q.Query.QueryRow(exec).Scan(&count)
 	if err != nil {
 		return false, errors.Wrap(err, "models: failed to check if time_trial exists")
 	}
@@ -349,13 +392,8 @@ func (q timeTrialQuery) Exists() (bool, error) {
 	return count > 0, nil
 }
 
-// BoatsG retrieves all the boat's boat.
-func (o *TimeTrial) BoatsG(mods ...qm.QueryMod) boatQuery {
-	return o.Boats(boil.GetDB(), mods...)
-}
-
-// Boats retrieves all the boat's boat with an executor.
-func (o *TimeTrial) Boats(exec boil.Executor, mods ...qm.QueryMod) boatQuery {
+// Boats retrieves all the boat's Boats with an executor.
+func (o *TimeTrial) Boats(mods ...qm.QueryMod) boatQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
@@ -365,7 +403,7 @@ func (o *TimeTrial) Boats(exec boil.Executor, mods ...qm.QueryMod) boatQuery {
 		qm.Where("\"boat\".\"time_trial_id\"=?", o.ID),
 	)
 
-	query := Boats(exec, queryMods...)
+	query := Boats(queryMods...)
 	queries.SetFrom(query.Query, "\"boat\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
@@ -376,51 +414,64 @@ func (o *TimeTrial) Boats(exec boil.Executor, mods ...qm.QueryMod) boatQuery {
 }
 
 // LoadBoats allows an eager lookup of values, cached into the
-// loaded structs of the objects.
-func (timeTrialL) LoadBoats(e boil.Executor, singular bool, maybeTimeTrial interface{}) error {
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (timeTrialL) LoadBoats(e boil.Executor, singular bool, maybeTimeTrial interface{}, mods queries.Applicator) error {
 	var slice []*TimeTrial
 	var object *TimeTrial
 
-	count := 1
 	if singular {
 		object = maybeTimeTrial.(*TimeTrial)
 	} else {
 		slice = *maybeTimeTrial.(*[]*TimeTrial)
-		count = len(slice)
 	}
 
-	args := make([]interface{}, count)
+	args := make([]interface{}, 0, 1)
 	if singular {
 		if object.R == nil {
 			object.R = &timeTrialR{}
 		}
-		args[0] = object.ID
+		args = append(args, object.ID)
 	} else {
-		for i, obj := range slice {
+	Outer:
+		for _, obj := range slice {
 			if obj.R == nil {
 				obj.R = &timeTrialR{}
 			}
-			args[i] = obj.ID
+
+			for _, a := range args {
+				if queries.Equal(a, obj.ID) {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
 		}
 	}
 
-	query := fmt.Sprintf(
-		"select * from \"boat\" where \"time_trial_id\" in (%s)",
-		strmangle.Placeholders(dialect.IndexPlaceholders, count, 1, 1),
-	)
-	if boil.DebugMode {
-		fmt.Fprintf(boil.DebugWriter, "%s\n%v\n", query, args)
+	if len(args) == 0 {
+		return nil
 	}
 
-	results, err := e.Query(query, args...)
+	query := NewQuery(qm.From(`boat`), qm.WhereIn(`time_trial_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
 	if err != nil {
 		return errors.Wrap(err, "failed to eager load boat")
 	}
-	defer results.Close()
 
 	var resultSlice []*Boat
 	if err = queries.Bind(results, &resultSlice); err != nil {
 		return errors.Wrap(err, "failed to bind eager loaded slice boat")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on boat")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for boat")
 	}
 
 	if len(boatAfterSelectHooks) != 0 {
@@ -432,13 +483,23 @@ func (timeTrialL) LoadBoats(e boil.Executor, singular bool, maybeTimeTrial inter
 	}
 	if singular {
 		object.R.Boats = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &boatR{}
+			}
+			foreign.R.TimeTrial = object
+		}
 		return nil
 	}
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if local.ID == foreign.TimeTrialID.Int {
+			if queries.Equal(local.ID, foreign.TimeTrialID) {
 				local.R.Boats = append(local.R.Boats, foreign)
+				if foreign.R == nil {
+					foreign.R = &boatR{}
+				}
+				foreign.R.TimeTrial = local
 				break
 			}
 		}
@@ -456,28 +517,6 @@ func (o *TimeTrial) AddBoatsG(insert bool, related ...*Boat) error {
 	return o.AddBoats(boil.GetDB(), insert, related...)
 }
 
-// AddBoatsP adds the given related objects to the existing relationships
-// of the time_trial, optionally inserting them as new records.
-// Appends related to o.R.Boats.
-// Sets related.R.TimeTrial appropriately.
-// Panics on error.
-func (o *TimeTrial) AddBoatsP(exec boil.Executor, insert bool, related ...*Boat) {
-	if err := o.AddBoats(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// AddBoatsGP adds the given related objects to the existing relationships
-// of the time_trial, optionally inserting them as new records.
-// Appends related to o.R.Boats.
-// Sets related.R.TimeTrial appropriately.
-// Uses the global database handle and panics on error.
-func (o *TimeTrial) AddBoatsGP(insert bool, related ...*Boat) {
-	if err := o.AddBoats(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // AddBoats adds the given related objects to the existing relationships
 // of the time_trial, optionally inserting them as new records.
 // Appends related to o.R.Boats.
@@ -486,9 +525,8 @@ func (o *TimeTrial) AddBoats(exec boil.Executor, insert bool, related ...*Boat) 
 	var err error
 	for _, rel := range related {
 		if insert {
-			rel.TimeTrialID.Int = o.ID
-			rel.TimeTrialID.Valid = true
-			if err = rel.Insert(exec); err != nil {
+			queries.Assign(&rel.TimeTrialID, o.ID)
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
@@ -508,8 +546,7 @@ func (o *TimeTrial) AddBoats(exec boil.Executor, insert bool, related ...*Boat) 
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			rel.TimeTrialID.Int = o.ID
-			rel.TimeTrialID.Valid = true
+			queries.Assign(&rel.TimeTrialID, o.ID)
 		}
 	}
 
@@ -544,32 +581,6 @@ func (o *TimeTrial) SetBoatsG(insert bool, related ...*Boat) error {
 	return o.SetBoats(boil.GetDB(), insert, related...)
 }
 
-// SetBoatsP removes all previously related items of the
-// time_trial replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.TimeTrial's Boats accordingly.
-// Replaces o.R.Boats with related.
-// Sets related.R.TimeTrial's Boats accordingly.
-// Panics on error.
-func (o *TimeTrial) SetBoatsP(exec boil.Executor, insert bool, related ...*Boat) {
-	if err := o.SetBoats(exec, insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// SetBoatsGP removes all previously related items of the
-// time_trial replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.TimeTrial's Boats accordingly.
-// Replaces o.R.Boats with related.
-// Sets related.R.TimeTrial's Boats accordingly.
-// Uses the global database handle and panics on error.
-func (o *TimeTrial) SetBoatsGP(insert bool, related ...*Boat) {
-	if err := o.SetBoats(boil.GetDB(), insert, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // SetBoats removes all previously related items of the
 // time_trial replacing them completely with the passed
 // in related items, optionally inserting them as new records.
@@ -591,7 +602,7 @@ func (o *TimeTrial) SetBoats(exec boil.Executor, insert bool, related ...*Boat) 
 
 	if o.R != nil {
 		for _, rel := range o.R.Boats {
-			rel.TimeTrialID.Valid = false
+			queries.SetScanner(&rel.TimeTrialID, nil)
 			if rel.R == nil {
 				continue
 			}
@@ -612,37 +623,17 @@ func (o *TimeTrial) RemoveBoatsG(related ...*Boat) error {
 	return o.RemoveBoats(boil.GetDB(), related...)
 }
 
-// RemoveBoatsP relationships from objects passed in.
-// Removes related items from R.Boats (uses pointer comparison, removal does not keep order)
-// Sets related.R.TimeTrial.
-// Panics on error.
-func (o *TimeTrial) RemoveBoatsP(exec boil.Executor, related ...*Boat) {
-	if err := o.RemoveBoats(exec, related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// RemoveBoatsGP relationships from objects passed in.
-// Removes related items from R.Boats (uses pointer comparison, removal does not keep order)
-// Sets related.R.TimeTrial.
-// Uses the global database handle and panics on error.
-func (o *TimeTrial) RemoveBoatsGP(related ...*Boat) {
-	if err := o.RemoveBoats(boil.GetDB(), related...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // RemoveBoats relationships from objects passed in.
 // Removes related items from R.Boats (uses pointer comparison, removal does not keep order)
 // Sets related.R.TimeTrial.
 func (o *TimeTrial) RemoveBoats(exec boil.Executor, related ...*Boat) error {
 	var err error
 	for _, rel := range related {
-		rel.TimeTrialID.Valid = false
+		queries.SetScanner(&rel.TimeTrialID, nil)
 		if rel.R != nil {
 			rel.R.TimeTrial = nil
 		}
-		if err = rel.Update(exec, "time_trial_id"); err != nil {
+		if _, err = rel.Update(exec, boil.Whitelist("time_trial_id")); err != nil {
 			return err
 		}
 	}
@@ -668,35 +659,20 @@ func (o *TimeTrial) RemoveBoats(exec boil.Executor, related ...*Boat) error {
 	return nil
 }
 
-// TimeTrialsG retrieves all records.
-func TimeTrialsG(mods ...qm.QueryMod) timeTrialQuery {
-	return TimeTrials(boil.GetDB(), mods...)
-}
-
 // TimeTrials retrieves all the records using an executor.
-func TimeTrials(exec boil.Executor, mods ...qm.QueryMod) timeTrialQuery {
+func TimeTrials(mods ...qm.QueryMod) timeTrialQuery {
 	mods = append(mods, qm.From("\"time_trial\""))
-	return timeTrialQuery{NewQuery(exec, mods...)}
+	return timeTrialQuery{NewQuery(mods...)}
 }
 
 // FindTimeTrialG retrieves a single record by ID.
-func FindTimeTrialG(id int, selectCols ...string) (*TimeTrial, error) {
-	return FindTimeTrial(boil.GetDB(), id, selectCols...)
-}
-
-// FindTimeTrialGP retrieves a single record by ID, and panics on error.
-func FindTimeTrialGP(id int, selectCols ...string) *TimeTrial {
-	retobj, err := FindTimeTrial(boil.GetDB(), id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
+func FindTimeTrialG(iD int, selectCols ...string) (*TimeTrial, error) {
+	return FindTimeTrial(boil.GetDB(), iD, selectCols...)
 }
 
 // FindTimeTrial retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindTimeTrial(exec boil.Executor, id int, selectCols ...string) (*TimeTrial, error) {
+func FindTimeTrial(exec boil.Executor, iD int, selectCols ...string) (*TimeTrial, error) {
 	timeTrialObj := &TimeTrial{}
 
 	sel := "*"
@@ -707,9 +683,9 @@ func FindTimeTrial(exec boil.Executor, id int, selectCols ...string) (*TimeTrial
 		"select %s from \"time_trial\" where \"id\"=$1", sel,
 	)
 
-	q := queries.Raw(exec, query, id)
+	q := queries.Raw(query, iD)
 
-	err := q.Bind(timeTrialObj)
+	err := q.Bind(nil, exec, timeTrialObj)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, sql.ErrNoRows
@@ -720,43 +696,14 @@ func FindTimeTrial(exec boil.Executor, id int, selectCols ...string) (*TimeTrial
 	return timeTrialObj, nil
 }
 
-// FindTimeTrialP retrieves a single record by ID with an executor, and panics on error.
-func FindTimeTrialP(exec boil.Executor, id int, selectCols ...string) *TimeTrial {
-	retobj, err := FindTimeTrial(exec, id, selectCols...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return retobj
-}
-
 // InsertG a single record. See Insert for whitelist behavior description.
-func (o *TimeTrial) InsertG(whitelist ...string) error {
-	return o.Insert(boil.GetDB(), whitelist...)
-}
-
-// InsertGP a single record, and panics on error. See Insert for whitelist
-// behavior description.
-func (o *TimeTrial) InsertGP(whitelist ...string) {
-	if err := o.Insert(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// InsertP a single record using an executor, and panics on error. See Insert
-// for whitelist behavior description.
-func (o *TimeTrial) InsertP(exec boil.Executor, whitelist ...string) {
-	if err := o.Insert(exec, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *TimeTrial) InsertG(columns boil.Columns) error {
+	return o.Insert(boil.GetDB(), columns)
 }
 
 // Insert a single record using an executor.
-// Whitelist behavior: If a whitelist is provided, only those columns supplied are inserted
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns without a default value are included (i.e. name, age)
-// - All columns with a default, but non-zero are included (i.e. health = 75)
-func (o *TimeTrial) Insert(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
+func (o *TimeTrial) Insert(exec boil.Executor, columns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no time_trial provided for insertion")
 	}
@@ -777,18 +724,17 @@ func (o *TimeTrial) Insert(exec boil.Executor, whitelist ...string) error {
 
 	nzDefaults := queries.NonZeroDefaultSet(timeTrialColumnsWithDefault, o)
 
-	key := makeCacheKey(whitelist, nzDefaults)
+	key := makeCacheKey(columns, nzDefaults)
 	timeTrialInsertCacheMut.RLock()
 	cache, cached := timeTrialInsertCache[key]
 	timeTrialInsertCacheMut.RUnlock()
 
 	if !cached {
-		wl, returnColumns := strmangle.InsertColumnSet(
+		wl, returnColumns := columns.InsertColumnSet(
 			timeTrialColumns,
 			timeTrialColumnsWithDefault,
 			timeTrialColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
 
 		cache.valueMapping, err = queries.BindMapping(timeTrialType, timeTrialMapping, wl)
@@ -800,9 +746,9 @@ func (o *TimeTrial) Insert(exec boil.Executor, whitelist ...string) error {
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"time_trial\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.IndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"time_trial\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"time_trial\" DEFAULT VALUES"
+			cache.query = "INSERT INTO \"time_trial\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -811,9 +757,7 @@ func (o *TimeTrial) Insert(exec boil.Executor, whitelist ...string) error {
 			queryReturning = fmt.Sprintf(" RETURNING \"%s\"", strings.Join(returnColumns, "\",\""))
 		}
 
-		if len(wl) != 0 {
-			cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
-		}
+		cache.query = fmt.Sprintf(cache.query, queryOutput, queryReturning)
 	}
 
 	value := reflect.Indirect(reflect.ValueOf(o))
@@ -843,63 +787,40 @@ func (o *TimeTrial) Insert(exec boil.Executor, whitelist ...string) error {
 	return o.doAfterInsertHooks(exec)
 }
 
-// UpdateG a single TimeTrial record. See Update for
-// whitelist behavior description.
-func (o *TimeTrial) UpdateG(whitelist ...string) error {
-	return o.Update(boil.GetDB(), whitelist...)
-}
-
-// UpdateGP a single TimeTrial record.
-// UpdateGP takes a whitelist of column names that should be updated.
-// Panics on error. See Update for whitelist behavior description.
-func (o *TimeTrial) UpdateGP(whitelist ...string) {
-	if err := o.Update(boil.GetDB(), whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateP uses an executor to update the TimeTrial, and panics on error.
-// See Update for whitelist behavior description.
-func (o *TimeTrial) UpdateP(exec boil.Executor, whitelist ...string) {
-	err := o.Update(exec, whitelist...)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
+// UpdateG a single TimeTrial record using the global executor.
+// See Update for more documentation.
+func (o *TimeTrial) UpdateG(columns boil.Columns) (int64, error) {
+	return o.Update(boil.GetDB(), columns)
 }
 
 // Update uses an executor to update the TimeTrial.
-// Whitelist behavior: If a whitelist is provided, only the columns given are updated.
-// No whitelist behavior: Without a whitelist, columns are inferred by the following rules:
-// - All columns are inferred to start with
-// - All primary keys are subtracted from this set
-// Update does not automatically update the record in case of default values. Use .Reload()
-// to refresh the records.
-func (o *TimeTrial) Update(exec boil.Executor, whitelist ...string) error {
+// See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
+// Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
+func (o *TimeTrial) Update(exec boil.Executor, columns boil.Columns) (int64, error) {
 	currTime := time.Now().In(boil.GetLocation())
 
 	o.UpdatedAt = currTime
 
 	var err error
 	if err = o.doBeforeUpdateHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
-	key := makeCacheKey(whitelist, nil)
+	key := makeCacheKey(columns, nil)
 	timeTrialUpdateCacheMut.RLock()
 	cache, cached := timeTrialUpdateCache[key]
 	timeTrialUpdateCacheMut.RUnlock()
 
 	if !cached {
-		wl := strmangle.UpdateColumnSet(
+		wl := columns.UpdateColumnSet(
 			timeTrialColumns,
 			timeTrialPrimaryKeyColumns,
-			whitelist,
 		)
 
-		if len(whitelist) == 0 {
+		if !columns.IsWhitelist() {
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return errors.New("models: unable to update time_trial, could not build whitelist")
+			return 0, errors.New("models: unable to update time_trial, could not build whitelist")
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"time_trial\" SET %s WHERE %s",
@@ -908,7 +829,7 @@ func (o *TimeTrial) Update(exec boil.Executor, whitelist ...string) error {
 		)
 		cache.valueMapping, err = queries.BindMapping(timeTrialType, timeTrialMapping, append(wl, timeTrialPrimaryKeyColumns...))
 		if err != nil {
-			return err
+			return 0, err
 		}
 	}
 
@@ -919,9 +840,15 @@ func (o *TimeTrial) Update(exec boil.Executor, whitelist ...string) error {
 		fmt.Fprintln(boil.DebugWriter, values)
 	}
 
-	_, err = exec.Exec(cache.query, values...)
+	var result sql.Result
+	result, err = exec.Exec(cache.query, values...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update time_trial row")
+		return 0, errors.Wrap(err, "models: unable to update time_trial row")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by update for time_trial")
 	}
 
 	if !cached {
@@ -930,56 +857,45 @@ func (o *TimeTrial) Update(exec boil.Executor, whitelist ...string) error {
 		timeTrialUpdateCacheMut.Unlock()
 	}
 
-	return o.doAfterUpdateHooks(exec)
-}
-
-// UpdateAllP updates all rows with matching column names, and panics on error.
-func (q timeTrialQuery) UpdateAllP(cols M) {
-	if err := q.UpdateAll(cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAll updates all rows with the specified column values.
-func (q timeTrialQuery) UpdateAll(cols M) error {
-	queries.SetUpdate(q.Query, cols)
-
-	_, err := q.Query.Exec()
-	if err != nil {
-		return errors.Wrap(err, "models: unable to update all for time_trial")
-	}
-
-	return nil
+	return rowsAff, o.doAfterUpdateHooks(exec)
 }
 
 // UpdateAllG updates all rows with the specified column values.
-func (o TimeTrialSlice) UpdateAllG(cols M) error {
+func (q timeTrialQuery) UpdateAllG(cols M) (int64, error) {
+	return q.UpdateAll(boil.GetDB(), cols)
+}
+
+// UpdateAll updates all rows with the specified column values.
+func (q timeTrialQuery) UpdateAll(exec boil.Executor, cols M) (int64, error) {
+	queries.SetUpdate(q.Query, cols)
+
+	result, err := q.Query.Exec(exec)
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to update all for time_trial")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected for time_trial")
+	}
+
+	return rowsAff, nil
+}
+
+// UpdateAllG updates all rows with the specified column values.
+func (o TimeTrialSlice) UpdateAllG(cols M) (int64, error) {
 	return o.UpdateAll(boil.GetDB(), cols)
 }
 
-// UpdateAllGP updates all rows with the specified column values, and panics on error.
-func (o TimeTrialSlice) UpdateAllGP(cols M) {
-	if err := o.UpdateAll(boil.GetDB(), cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpdateAllP updates all rows with the specified column values, and panics on error.
-func (o TimeTrialSlice) UpdateAllP(exec boil.Executor, cols M) {
-	if err := o.UpdateAll(exec, cols); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // UpdateAll updates all rows with the specified column values, using an executor.
-func (o TimeTrialSlice) UpdateAll(exec boil.Executor, cols M) error {
+func (o TimeTrialSlice) UpdateAll(exec boil.Executor, cols M) (int64, error) {
 	ln := int64(len(o))
 	if ln == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(cols) == 0 {
-		return errors.New("models: update all requires at least one column argument")
+		return 0, errors.New("models: update all requires at least one column argument")
 	}
 
 	colNames := make([]string, len(cols))
@@ -1007,36 +923,26 @@ func (o TimeTrialSlice) UpdateAll(exec boil.Executor, cols M) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to update all in timeTrial slice")
+		return 0, errors.Wrap(err, "models: unable to update all in timeTrial slice")
 	}
 
-	return nil
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: unable to retrieve rows affected all in update all timeTrial")
+	}
+	return rowsAff, nil
 }
 
 // UpsertG attempts an insert, and does an update or ignore on conflict.
-func (o *TimeTrial) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
-	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...)
-}
-
-// UpsertGP attempts an insert, and does an update or ignore on conflict. Panics on error.
-func (o *TimeTrial) UpsertGP(updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// UpsertP attempts an insert using an executor, and does an update or ignore on conflict.
-// UpsertP panics on error.
-func (o *TimeTrial) UpsertP(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) {
-	if err := o.Upsert(exec, updateOnConflict, conflictColumns, updateColumns, whitelist...); err != nil {
-		panic(boil.WrapErr(err))
-	}
+func (o *TimeTrial) UpsertG(updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
+	return o.Upsert(boil.GetDB(), updateOnConflict, conflictColumns, updateColumns, insertColumns)
 }
 
 // Upsert attempts an insert using an executor, and does an update or ignore on conflict.
-func (o *TimeTrial) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns []string, whitelist ...string) error {
+// See boil.Columns documentation for how to properly use updateColumns and insertColumns.
+func (o *TimeTrial) Upsert(exec boil.Executor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("models: no time_trial provided for upsert")
 	}
@@ -1053,9 +959,8 @@ func (o *TimeTrial) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 
 	nzDefaults := queries.NonZeroDefaultSet(timeTrialColumnsWithDefault, o)
 
-	// Build cache key in-line uglily - mysql vs postgres problems
+	// Build cache key in-line uglily - mysql vs psql problems
 	buf := strmangle.GetBuffer()
-
 	if updateOnConflict {
 		buf.WriteByte('t')
 	} else {
@@ -1066,11 +971,13 @@ func (o *TimeTrial) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range updateColumns {
+	buf.WriteString(strconv.Itoa(updateColumns.Kind))
+	for _, c := range updateColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
-	for _, c := range whitelist {
+	buf.WriteString(strconv.Itoa(insertColumns.Kind))
+	for _, c := range insertColumns.Cols {
 		buf.WriteString(c)
 	}
 	buf.WriteByte('.')
@@ -1087,20 +994,18 @@ func (o *TimeTrial) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 	var err error
 
 	if !cached {
-		insert, ret := strmangle.InsertColumnSet(
+		insert, ret := insertColumns.InsertColumnSet(
 			timeTrialColumns,
 			timeTrialColumnsWithDefault,
 			timeTrialColumnsWithoutDefault,
 			nzDefaults,
-			whitelist,
 		)
-
-		update := strmangle.UpdateColumnSet(
+		update := updateColumns.UpdateColumnSet(
 			timeTrialColumns,
 			timeTrialPrimaryKeyColumns,
-			updateColumns,
 		)
-		if len(update) == 0 {
+
+		if updateOnConflict && len(update) == 0 {
 			return errors.New("models: unable to upsert time_trial, could not build update column list")
 		}
 
@@ -1109,7 +1014,7 @@ func (o *TimeTrial) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 			conflict = make([]string, len(timeTrialPrimaryKeyColumns))
 			copy(conflict, timeTrialPrimaryKeyColumns)
 		}
-		cache.query = queries.BuildUpsertQueryPostgres(dialect, "\"time_trial\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"time_trial\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(timeTrialType, timeTrialMapping, insert)
 		if err != nil {
@@ -1156,43 +1061,21 @@ func (o *TimeTrial) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 	return o.doAfterUpsertHooks(exec)
 }
 
-// DeleteP deletes a single TimeTrial record with an executor.
-// DeleteP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *TimeTrial) DeleteP(exec boil.Executor) {
-	if err := o.Delete(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteG deletes a single TimeTrial record.
 // DeleteG will match against the primary key column to find the record to delete.
-func (o *TimeTrial) DeleteG() error {
-	if o == nil {
-		return errors.New("models: no TimeTrial provided for deletion")
-	}
-
+func (o *TimeTrial) DeleteG() (int64, error) {
 	return o.Delete(boil.GetDB())
-}
-
-// DeleteGP deletes a single TimeTrial record.
-// DeleteGP will match against the primary key column to find the record to delete.
-// Panics on error.
-func (o *TimeTrial) DeleteGP() {
-	if err := o.DeleteG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
 }
 
 // Delete deletes a single TimeTrial record with an executor.
 // Delete will match against the primary key column to find the record to delete.
-func (o *TimeTrial) Delete(exec boil.Executor) error {
+func (o *TimeTrial) Delete(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no TimeTrial provided for delete")
+		return 0, errors.New("models: no TimeTrial provided for delete")
 	}
 
 	if err := o.doBeforeDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), timeTrialPrimaryKeyMapping)
@@ -1203,77 +1086,63 @@ func (o *TimeTrial) Delete(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args...)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete from time_trial")
+		return 0, errors.Wrap(err, "models: unable to delete from time_trial")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by delete for time_trial")
 	}
 
 	if err := o.doAfterDeleteHooks(exec); err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
-}
-
-// DeleteAllP deletes all rows, and panics on error.
-func (q timeTrialQuery) DeleteAllP() {
-	if err := q.DeleteAll(); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // DeleteAll deletes all matching rows.
-func (q timeTrialQuery) DeleteAll() error {
+func (q timeTrialQuery) DeleteAll(exec boil.Executor) (int64, error) {
 	if q.Query == nil {
-		return errors.New("models: no timeTrialQuery provided for delete all")
+		return 0, errors.New("models: no timeTrialQuery provided for delete all")
 	}
 
 	queries.SetDelete(q.Query)
 
-	_, err := q.Query.Exec()
+	result, err := q.Query.Exec(exec)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from time_trial")
+		return 0, errors.Wrap(err, "models: unable to delete all from time_trial")
 	}
 
-	return nil
-}
-
-// DeleteAllGP deletes all rows in the slice, and panics on error.
-func (o TimeTrialSlice) DeleteAllGP() {
-	if err := o.DeleteAllG(); err != nil {
-		panic(boil.WrapErr(err))
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for time_trial")
 	}
+
+	return rowsAff, nil
 }
 
 // DeleteAllG deletes all rows in the slice.
-func (o TimeTrialSlice) DeleteAllG() error {
-	if o == nil {
-		return errors.New("models: no TimeTrial slice provided for delete all")
-	}
+func (o TimeTrialSlice) DeleteAllG() (int64, error) {
 	return o.DeleteAll(boil.GetDB())
 }
 
-// DeleteAllP deletes all rows in the slice, using an executor, and panics on error.
-func (o TimeTrialSlice) DeleteAllP(exec boil.Executor) {
-	if err := o.DeleteAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // DeleteAll deletes all rows in the slice, using an executor.
-func (o TimeTrialSlice) DeleteAll(exec boil.Executor) error {
+func (o TimeTrialSlice) DeleteAll(exec boil.Executor) (int64, error) {
 	if o == nil {
-		return errors.New("models: no TimeTrial slice provided for delete all")
+		return 0, errors.New("models: no TimeTrial slice provided for delete all")
 	}
 
 	if len(o) == 0 {
-		return nil
+		return 0, nil
 	}
 
 	if len(timeTrialBeforeDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doBeforeDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
@@ -1292,34 +1161,25 @@ func (o TimeTrialSlice) DeleteAll(exec boil.Executor) error {
 		fmt.Fprintln(boil.DebugWriter, args)
 	}
 
-	_, err := exec.Exec(sql, args...)
+	result, err := exec.Exec(sql, args...)
 	if err != nil {
-		return errors.Wrap(err, "models: unable to delete all from timeTrial slice")
+		return 0, errors.Wrap(err, "models: unable to delete all from timeTrial slice")
+	}
+
+	rowsAff, err := result.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrap(err, "models: failed to get rows affected by deleteall for time_trial")
 	}
 
 	if len(timeTrialAfterDeleteHooks) != 0 {
 		for _, obj := range o {
 			if err := obj.doAfterDeleteHooks(exec); err != nil {
-				return err
+				return 0, err
 			}
 		}
 	}
 
-	return nil
-}
-
-// ReloadGP refetches the object from the database and panics on error.
-func (o *TimeTrial) ReloadGP() {
-	if err := o.ReloadG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadP refetches the object from the database with an executor. Panics on error.
-func (o *TimeTrial) ReloadP(exec boil.Executor) {
-	if err := o.Reload(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
+	return rowsAff, nil
 }
 
 // ReloadG refetches the object from the database using the primary keys.
@@ -1343,24 +1203,6 @@ func (o *TimeTrial) Reload(exec boil.Executor) error {
 	return nil
 }
 
-// ReloadAllGP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *TimeTrialSlice) ReloadAllGP() {
-	if err := o.ReloadAllG(); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
-// ReloadAllP refetches every row with matching primary key column values
-// and overwrites the original object slice with the newly updated slice.
-// Panics on error.
-func (o *TimeTrialSlice) ReloadAllP(exec boil.Executor) {
-	if err := o.ReloadAll(exec); err != nil {
-		panic(boil.WrapErr(err))
-	}
-}
-
 // ReloadAllG refetches every row with matching primary key column values
 // and overwrites the original object slice with the newly updated slice.
 func (o *TimeTrialSlice) ReloadAllG() error {
@@ -1378,7 +1220,7 @@ func (o *TimeTrialSlice) ReloadAll(exec boil.Executor) error {
 		return nil
 	}
 
-	timeTrials := TimeTrialSlice{}
+	slice := TimeTrialSlice{}
 	var args []interface{}
 	for _, obj := range *o {
 		pkeyArgs := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(obj)), timeTrialPrimaryKeyMapping)
@@ -1388,29 +1230,34 @@ func (o *TimeTrialSlice) ReloadAll(exec boil.Executor) error {
 	sql := "SELECT \"time_trial\".* FROM \"time_trial\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, timeTrialPrimaryKeyColumns, len(*o))
 
-	q := queries.Raw(exec, sql, args...)
+	q := queries.Raw(sql, args...)
 
-	err := q.Bind(&timeTrials)
+	err := q.Bind(nil, exec, &slice)
 	if err != nil {
 		return errors.Wrap(err, "models: unable to reload all in TimeTrialSlice")
 	}
 
-	*o = timeTrials
+	*o = slice
 
 	return nil
 }
 
+// TimeTrialExistsG checks if the TimeTrial row exists.
+func TimeTrialExistsG(iD int) (bool, error) {
+	return TimeTrialExists(boil.GetDB(), iD)
+}
+
 // TimeTrialExists checks if the TimeTrial row exists.
-func TimeTrialExists(exec boil.Executor, id int) (bool, error) {
+func TimeTrialExists(exec boil.Executor, iD int) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"time_trial\" where \"id\"=$1 limit 1)"
 
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, sql)
-		fmt.Fprintln(boil.DebugWriter, id)
+		fmt.Fprintln(boil.DebugWriter, iD)
 	}
 
-	row := exec.QueryRow(sql, id)
+	row := exec.QueryRow(sql, iD)
 
 	err := row.Scan(&exists)
 	if err != nil {
@@ -1418,29 +1265,4 @@ func TimeTrialExists(exec boil.Executor, id int) (bool, error) {
 	}
 
 	return exists, nil
-}
-
-// TimeTrialExistsG checks if the TimeTrial row exists.
-func TimeTrialExistsG(id int) (bool, error) {
-	return TimeTrialExists(boil.GetDB(), id)
-}
-
-// TimeTrialExistsGP checks if the TimeTrial row exists. Panics on error.
-func TimeTrialExistsGP(id int) bool {
-	e, err := TimeTrialExists(boil.GetDB(), id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
-}
-
-// TimeTrialExistsP checks if the TimeTrial row exists. Panics on error.
-func TimeTrialExistsP(exec boil.Executor, id int) bool {
-	e, err := TimeTrialExists(exec, id)
-	if err != nil {
-		panic(boil.WrapErr(err))
-	}
-
-	return e
 }

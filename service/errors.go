@@ -2,10 +2,10 @@ package service
 
 import (
 	"errors"
-	"github.com/businessinstincts/traxone/domain"
+	"github.com/bolinkd/time-trial/domain"
 )
 
 var (
-	ErrTimeTrialNotFound domain.TraxError = errors.New("time trial not found")
-	ErrBoatNotFound      domain.TraxError = errors.New("boat not found")
+	ErrTimeTrialNotFound domain.AppError = errors.New("time trial not found")
+	ErrBoatNotFound      domain.AppError = errors.New("boat not found")
 )

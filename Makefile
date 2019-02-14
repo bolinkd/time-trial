@@ -1,41 +1,23 @@
+GO_BUILD_ENV := CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+DOCKER_BUILD=$(shell pwd)/.docker_build
+DOCKER_CMD=$(DOCKER_BUILD)/go-getting-started
+
 save:
 	rm -rf Godeps/ vendor/
 	godep save ./...
 
 sqlboiler:
-	sqlboiler -b goose_db_version --wipe --no-tests postgres
+	sqlboiler --wipe --no-tests --add-global-variants --no-context psql
 
 test:
 	go test ./...
 
-# Creates mocks for testing
-mocks:
-	cd ./socket &&\
-	mockery -name=ClientInterface
+$(DOCKER_CMD): clean
+	mkdir -p $(DOCKER_BUILD)
+	$(GO_BUILD_ENV) go build -v -o $(DOCKER_CMD) .
 
-	cd ./onspot &&\
-	mockery -name=ClientInterface
-
-	cd ./paytrace &&\
-    	mockery -name=ClientInterface
-
-	cd ./appnexus &&\
-	mockery -name=ClientInterface
-
-	cd ./aws &&\
-	mockery -name=ClientInterface
-
-	cd ./db &&\
-    	mockery -all
-
-# Get or updates the dependencies for this project
-deps:
-	go get -u github.com/gin-gonic/gin
-	go get -u github.com/volatiletech/sqlboiler
-
-# Cleans our project: deletes binaries and coverage report
 clean:
-	if [ -f ${BINARY} ] ; then rm ${BINARY} ; fi
-	if [ -f coverage.html ] ; then rm coverage.html ; fi
+	rm -rf $(DOCKER_BUILD)
 
-.PHONY: clean test
+heroku: $(DOCKER_CMD)
+	heroku container:push web

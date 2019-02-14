@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"github.com/businessinstincts/traxone/domain"
+	"github.com/bolinkd/time-trial/domain"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net/http"

@@ -1,9 +1,8 @@
 package domain
 
 import (
+	"github.com/volatiletech/null"
 	"testing"
-
-	"gopkg.in/volatiletech/null.v6"
 )
 
 func Test_isValidNullInt(t *testing.T) {
