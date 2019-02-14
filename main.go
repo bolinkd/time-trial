@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
-	"net/http"
 	"os"
 	"os/signal"
 )
@@ -67,9 +66,7 @@ func main() {
 
 	lp := fmt.Sprintf(":%s", *port)
 	log.WithField("message", fmt.Sprintf("Server Started On Port: %s", *port)).Info()
-	if err := http.ListenAndServe(lp, router); err != nil {
-		log.Panic(err.Error())
-	}
+	router.Run(lp)
 }
 
 func listenForShutdown(ch <-chan os.Signal) {
