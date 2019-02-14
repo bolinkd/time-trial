@@ -10,16 +10,22 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
+	"net/http"
 	"os"
 	"os/signal"
 )
 
-var port = flag.String("port", "8080", "Server port")
+var flagPort = flag.String("port", "8080", "Server port")
 var sqlDebug = flag.Bool("sql_debug", false, "Turns on sql debugging")
 
 func main() {
 	log.Println("Starting server...")
 	flag.Parse()
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = *flagPort
+	}
 
 	ch := make(chan os.Signal)
 	signal.Notify(ch, os.Interrupt, os.Kill)
@@ -64,9 +70,11 @@ func main() {
 	v1.POST("/boats", handlers.CreateBoat)
 	v1.PUT("/boats", handlers.UpdateBoat)
 
-	lp := fmt.Sprintf(":%s", *port)
-	log.WithField("message", fmt.Sprintf("Server Started On Port: %s", *port)).Info()
-	router.Run(lp)
+	lp := fmt.Sprintf(":%s", port)
+	log.WithField("message", fmt.Sprintf("Server Started On Port: %s", port)).Info()
+	if err := http.ListenAndServe(lp, router); err != nil {
+		log.Panic(err.Error())
+	}
 }
 
 func listenForShutdown(ch <-chan os.Signal) {
