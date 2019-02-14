@@ -9,30 +9,34 @@ import (
 	"strconv"
 )
 
-func GetTimeTrials(context *gin.Context) {
+func GetBoatsForTimeTrial(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 
-	user, err := timeTrialService.GetTimeTrials(database)
-	if err == service.ErrTimeTrialNotFound {
-		NotFound(context, err)
-	} else if err != nil {
+	timeTrialID, err := strconv.Atoi(context.Param("id"))
+	if err != nil {
+		BadRequest(context, fmt.Sprintf("invalid id: %d", timeTrialID))
+		return
+	}
+
+	user, err := boatService.GetBoatsForTimeTrial(database, timeTrialID)
+	if err != nil {
 		UnexpectedError(context, err)
 	} else {
 		Ok(context, user)
 	}
 }
 
-func GetTimeTrialById(context *gin.Context) {
+func GetBoatByID(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 
-	timeTrialID, err := strconv.Atoi(context.Param("id"))
+	boatID, err := strconv.Atoi(context.Param("id"))
 	if err != nil {
-		BadRequest(context, fmt.Sprintf("invalid userID: %d", timeTrialID))
+		BadRequest(context, fmt.Sprintf("invalid id: %d", boatID))
 		return
 	}
 
-	timeTrial, err := timeTrialService.GetTimeTrialById(database, timeTrialID)
-	if err == service.ErrTimeTrialNotFound {
+	timeTrial, err := boatService.GetBoatByID(database, boatID)
+	if err == service.ErrBoatNotFound {
 		NotFound(context, err)
 	} else if err != nil {
 		UnexpectedError(context, err)
@@ -41,17 +45,17 @@ func GetTimeTrialById(context *gin.Context) {
 	}
 }
 
-func CreateTimeTrial(context *gin.Context) {
+func CreateBoat(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 
-	var timeTrialD domain.TimeTrial
-	err := decodeAndValidate(context, &timeTrialD)
+	var boatD domain.Boat
+	err := decodeAndValidate(context, &boatD)
 	if err != nil {
 		BadRequest(context, err.Error())
 		return
 	}
 
-	timeTrial, err := timeTrialService.CreateTimeTrial(database, timeTrialD)
+	boat, err := boatService.CreateBoat(database, boatD)
 	if err != nil {
 		if _, ok := err.(domain.TraxError); ok {
 			BadRequest(context, err.Error())
@@ -59,28 +63,28 @@ func CreateTimeTrial(context *gin.Context) {
 			UnexpectedError(context, err)
 		}
 	} else {
-		Created(context, timeTrial)
+		Created(context, boat)
 	}
 }
 
-func UpdateTimeTrial(context *gin.Context) {
+func UpdateBoat(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 
-	var timeTrialD domain.TimeTrial
-	err := decodeAndValidate(context, &timeTrialD)
+	var boatD domain.Boat
+	err := decodeAndValidate(context, &boatD)
 	if err != nil {
 		BadRequest(context, err.Error())
 		return
 	}
 
-	timeTrial, err := timeTrialService.UpdateTimeTrial(database, timeTrialD)
+	boat, err := boatService.UpdateBoat(database, boatD)
 	if err != nil {
-		if err == service.ErrTimeTrialNotFound {
+		if err == service.ErrBoatNotFound {
 			BadRequest(context, err.Error())
 		} else {
 			UnexpectedError(context, err)
 		}
 	} else {
-		Ok(context, timeTrial)
+		Ok(context, boat)
 	}
 }

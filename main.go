@@ -59,8 +59,11 @@ func main() {
 	v1.GET("/time-trials", handlers.GetTimeTrials)
 	v1.POST("/time-trials", handlers.CreateTimeTrial)
 	v1.PUT("/time-trials", handlers.UpdateTimeTrial)
-
 	v1.GET("/time-trials/:id", handlers.GetTimeTrialById)
+	v1.GET("/time-trials/:id/boats", handlers.GetBoatsForTimeTrial)
+	v1.GET("/boats/:id", handlers.GetBoatByID)
+	v1.POST("/boats", handlers.CreateBoat)
+	v1.PUT("/boats", handlers.UpdateBoat)
 
 	lp := fmt.Sprintf(":%s", *port)
 	log.WithField("message", fmt.Sprintf("Server Started On Port: %s", *port)).Info()

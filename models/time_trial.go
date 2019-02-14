@@ -29,7 +29,7 @@ type TimeTrial struct {
 	TimingStatus null.Int     `boil:"timing_status" json:"timing_status,omitempty" toml:"timing_status" yaml:"timing_status,omitempty"`
 	Timers       null.Int     `boil:"timers" json:"timers,omitempty" toml:"timers" yaml:"timers,omitempty"`
 	Distance     null.Float64 `boil:"distance" json:"distance,omitempty" toml:"distance" yaml:"distance,omitempty"`
-	CreatedAt    null.Time    `boil:"created_at" json:"created_at,omitempty" toml:"created_at" yaml:"created_at,omitempty"`
+	CreatedAt    time.Time    `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt    time.Time    `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *timeTrialR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -764,9 +764,8 @@ func (o *TimeTrial) Insert(exec boil.Executor, whitelist ...string) error {
 	var err error
 	currTime := time.Now().In(boil.GetLocation())
 
-	if o.CreatedAt.Time.IsZero() {
-		o.CreatedAt.Time = currTime
-		o.CreatedAt.Valid = true
+	if o.CreatedAt.IsZero() {
+		o.CreatedAt = currTime
 	}
 	if o.UpdatedAt.IsZero() {
 		o.UpdatedAt = currTime
@@ -1043,9 +1042,8 @@ func (o *TimeTrial) Upsert(exec boil.Executor, updateOnConflict bool, conflictCo
 	}
 	currTime := time.Now().In(boil.GetLocation())
 
-	if o.CreatedAt.Time.IsZero() {
-		o.CreatedAt.Time = currTime
-		o.CreatedAt.Valid = true
+	if o.CreatedAt.IsZero() {
+		o.CreatedAt = currTime
 	}
 	o.UpdatedAt = currTime
 

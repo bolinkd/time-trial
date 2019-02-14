@@ -25,6 +25,7 @@ type Connection struct {
 
 type DatabaseInterface interface {
 	TimeTrialDBInterface
+	BoatDBInterface
 	GetTransactor() (boil.Transactor, error)
 }
 

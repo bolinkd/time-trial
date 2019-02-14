@@ -17,6 +17,13 @@ func ConvertTimeTrialsToDomain(timeTrials models.TimeTrialSlice) domain.TimeTria
 }
 
 func ConvertTimeTrialToDomain(timeTrial *models.TimeTrial) *domain.TimeTrial {
+	var boats domain.BoatSlice
+	if timeTrial.R != nil && timeTrial.R.Boats != nil {
+		boats = ConvertBoatsToDomain(timeTrial.R.Boats)
+	} else {
+		boats = domain.BoatSlice{}
+	}
+
 	return &domain.TimeTrial{
 		ID:           timeTrial.ID,
 		Date:         null.TimeFrom(timeTrial.Date),
@@ -25,7 +32,8 @@ func ConvertTimeTrialToDomain(timeTrial *models.TimeTrial) *domain.TimeTrial {
 		TimingStatus: domain.TimingStatus(timeTrial.TimingStatus.Int),
 		Timers:       timeTrial.Timers.Int,
 		Distance:     timeTrial.Distance.Float64,
-		CreatedAt:    timeTrial.CreatedAt.Time,
+		Boats:        boats,
+		CreatedAt:    timeTrial.CreatedAt,
 		UpdatedAt:    timeTrial.UpdatedAt,
 	}
 }
@@ -39,7 +47,7 @@ func ConvertTimeTrialToModel(timeTrial domain.TimeTrial) *models.TimeTrial {
 		TimingStatus: null.IntFrom(int(timeTrial.TimingStatus)),
 		Timers:       null.IntFrom(timeTrial.Timers),
 		Distance:     null.Float64From(timeTrial.Distance),
-		CreatedAt:    null.TimeFrom(timeTrial.CreatedAt),
+		CreatedAt:    timeTrial.CreatedAt,
 		UpdatedAt:    timeTrial.UpdatedAt,
 	}
 }

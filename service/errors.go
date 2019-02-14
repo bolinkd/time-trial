@@ -6,5 +6,6 @@ import (
 )
 
 var (
-	ErrTimeTrialNotFound domain.TraxError = errors.New("timetrial not found")
+	ErrTimeTrialNotFound domain.TraxError = errors.New("time trial not found")
+	ErrBoatNotFound      domain.TraxError = errors.New("boat not found")
 )

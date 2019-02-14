@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS Time_Trial (
   "timing_status" INTEGER,
   "timers" INTEGER,
   "distance" DOUBLE PRECISION,
-  "created_at" TIMESTAMP,
+  "created_at" TIMESTAMP WITH TIME ZONE NOT NULL,
   "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL
 );
 

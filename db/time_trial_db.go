@@ -9,11 +9,11 @@ import (
 type TimeTrialDBInterface interface {
 	FindTimeTrials(tx boil.Executor) (models.TimeTrialSlice, error)
 	FindTimeTrialByID(id int, tx boil.Executor) (*models.TimeTrial, error)
-	AddTimeTrial(traxUser *models.TimeTrial, tx boil.Executor) error
-	UpdateTimeTrial(traxUser *models.TimeTrial, tx boil.Executor) error
+	AddTimeTrial(timeTrial *models.TimeTrial, tx boil.Executor) error
+	UpdateTimeTrial(timeTrial *models.TimeTrial, tx boil.Executor) error
 }
 
-func (conn Connection) FindTimeTrials(id int, tx boil.Executor) (models.TimeTrialSlice, error) {
+func (conn Connection) FindTimeTrials(tx boil.Executor) (models.TimeTrialSlice, error) {
 	if tx == nil {
 		tx = conn.DB
 	}
@@ -34,7 +34,7 @@ func (conn Connection) AddTimeTrial(timeTrial *models.TimeTrial, tx boil.Executo
 	return timeTrial.Insert(tx)
 }
 
-func (conn Connection) UpdateUser(timeTrial *models.TimeTrial, tx boil.Executor) error {
+func (conn Connection) UpdateTimeTrial(timeTrial *models.TimeTrial, tx boil.Executor) error {
 	if tx == nil {
 		tx = conn.DB
 	}

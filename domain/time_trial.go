@@ -26,6 +26,7 @@ type TimeTrial struct {
 	TimingStatus TimingStatus `json:"timing_status"`
 	Timers       int          `json:"timers"`
 	Distance     float64      `json:"distance"`
+	Boats        BoatSlice    `json:"boats"`
 	CreatedAt    time.Time    `json:"created_at"`
 	UpdatedAt    time.Time    `json:"updated_at"`
 }

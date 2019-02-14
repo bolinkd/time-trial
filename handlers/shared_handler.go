@@ -6,4 +6,5 @@ import (
 
 var (
 	timeTrialService service.TimeTrialServiceInterface = &service.TimeTrialService{}
+	boatService      service.BoatServiceInterface      = &service.BoatService{}
 )

@@ -1,4 +1,4 @@
 
 development:
     driver: postgres
-    open: user=postgres dbname=time-trial password=nopassword sslmode=disable
+    open: user=postgres dbname=time_trial_db password=nopassword sslmode=disable
