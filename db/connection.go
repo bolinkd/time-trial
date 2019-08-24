@@ -26,6 +26,13 @@ type Connection struct {
 type DatabaseInterface interface {
 	TimeTrialDBInterface
 	BoatDBInterface
+	OrganizationDBInterface
+	ClubDBInterface
+	GroupDBInterface
+	RowerDBInterface
+	ShellDBInterface
+	RentalDBInterface
+	RentalRowerDBInterface
 	GetTransactor() (boil.Transactor, error)
 }
 

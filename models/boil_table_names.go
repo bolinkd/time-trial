@@ -4,11 +4,25 @@
 package models
 
 var TableNames = struct {
+	Group          string
 	Boat           string
+	Club           string
 	GooseDBVersion string
+	Organization   string
+	Rental         string
+	RentalRowers   string
+	Rower          string
+	Shell          string
 	TimeTrial      string
 }{
+	Group:          "Group",
 	Boat:           "boat",
+	Club:           "club",
 	GooseDBVersion: "goose_db_version",
+	Organization:   "organization",
+	Rental:         "rental",
+	RentalRowers:   "rental_rowers",
+	Rower:          "rower",
+	Shell:          "shell",
 	TimeTrial:      "time_trial",
 }

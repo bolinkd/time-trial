@@ -4,57 +4,34 @@ import (
 	"database/sql"
 	"github.com/bolinkd/time-trial/db"
 	"github.com/bolinkd/time-trial/domain"
-	"github.com/bolinkd/time-trial/modext"
+	"github.com/bolinkd/time-trial/models"
 )
 
 type BoatServiceInterface interface {
-	GetBoatsForTimeTrial(db db.DatabaseInterface, timeTrialID int) (domain.BoatSlice, error)
-	GetBoatByID(db db.DatabaseInterface, boatID int) (*domain.Boat, error)
-	CreateBoat(db db.DatabaseInterface, boat domain.Boat) (*domain.Boat, error)
-	UpdateBoat(db db.DatabaseInterface, boat domain.Boat) (*domain.Boat, error)
+	GetBoatsForTimeTrial(db db.DatabaseInterface, timeTrialID int) (models.BoatSlice, error)
+	GetBoatByID(db db.DatabaseInterface, boatID int) (*models.Boat, error)
+	CreateBoat(db db.DatabaseInterface, boat *models.Boat) error
+	UpdateBoat(db db.DatabaseInterface, boat *models.Boat) error
 }
 
-type BoatService struct{}
-
-func (BoatService) GetBoatsForTimeTrial(db db.DatabaseInterface, timeTrialID int) (domain.BoatSlice, error) {
-	boats, err := db.FindBoatsByTimeTrial(timeTrialID, nil)
-	if err != nil {
-		return nil, err
-	}
-	return modext.ConvertBoatsToDomain(boats), nil
+func (Services) GetBoatsForTimeTrial(db db.DatabaseInterface, timeTrialID int) (models.BoatSlice, error) {
+	return db.FindBoatsByTimeTrial(nil, timeTrialID)
 }
 
-func (BoatService) GetBoatByID(db db.DatabaseInterface, boatID int) (*domain.Boat, error) {
-	boat, err := db.FindBoatByID(boatID, nil)
+func (Services) GetBoatByID(db db.DatabaseInterface, boatID int) (*models.Boat, error) {
+	boat, err := db.FindBoatByID(nil, boatID)
 	if err == sql.ErrNoRows {
-		return nil, ErrBoatNotFound
+		return nil, domain.ErrBoatNotFound
 	} else if err != nil {
 		return nil, err
 	}
-	return modext.ConvertBoatToDomain(boat), nil
+	return boat, nil
 }
 
-func (BoatService) CreateBoat(db db.DatabaseInterface, boat domain.Boat) (*domain.Boat, error) {
-	boatM := modext.ConvertBoatToModel(boat)
-
-	err := db.AddBoat(boatM, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return modext.ConvertBoatToDomain(boatM), nil
+func (Services) CreateBoat(db db.DatabaseInterface, boat *models.Boat) error {
+	return db.AddBoat(nil, boat)
 }
 
-func (BoatService) UpdateBoat(db db.DatabaseInterface, boat domain.Boat) (*domain.Boat, error) {
-	boatM := modext.ConvertBoatToModel(boat)
-
-	if boatM.ID == 0 {
-		return nil, ErrBoatNotFound
-	}
-
-	err := db.UpdateBoat(boatM, nil)
-	if err != nil {
-		return nil, err
-	}
-	return modext.ConvertBoatToDomain(boatM), nil
+func (Services) UpdateBoat(db db.DatabaseInterface, boat *models.Boat) error {
+	return db.UpdateBoat(nil, boat)
 }

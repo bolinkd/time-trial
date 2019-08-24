@@ -1,6 +1,7 @@
 package db
 
 import (
+	"github.com/bolinkd/time-trial/domain"
 	"github.com/bolinkd/time-trial/models"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -38,6 +39,13 @@ func (conn Connection) UpdateTimeTrial(timeTrial *models.TimeTrial, tx boil.Exec
 	if tx == nil {
 		tx = conn.DB
 	}
-	_, err := timeTrial.Update(tx, boil.Infer())
+	rowsAff, err := timeTrial.Update(tx, boil.Infer())
+	if err != nil {
+		return err
+	}
+
+	if rowsAff != 0 {
+		return domain.ErrTimeTrialNotFound
+	}
 	return err
 }
