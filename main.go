@@ -68,48 +68,50 @@ func main() {
 
 	// ORGANIZATION
 	v1.GET("/organizations", handlers.GetOrganizations)
-	v1.GET("/organizations/:id", handlers.GetOrganizationByID)
-	v1.POST("/organizations", handlers.CreateOrganization)
-	v1.PUT("/organizations", handlers.UpdateOrganization)
-	v1.GET("/organizations/:id/clubs", handlers.GetClubsByOrganization)
+
+	auth := v1.Group("/").Use(middleware.AuthMiddleware)
+	auth.GET("/organizations/:id", handlers.GetOrganizationByID)
+	auth.POST("/organizations", handlers.CreateOrganization)
+	auth.PUT("/organizations", handlers.UpdateOrganization)
+	auth.GET("/organizations/:id/clubs", handlers.GetClubsByOrganization)
 
 	// CLUB
-	v1.GET("/clubs/:id", handlers.GetClubByID)
-	v1.POST("/clubs", handlers.CreateClub)
-	v1.PUT("/clubs", handlers.UpdateClub)
-	v1.GET("/clubs/:id/shells", handlers.GetShellsByClub)
-	v1.GET("/clubs/:id/groups", handlers.GetGroupsByClub)
+	auth.GET("/clubs/:id", handlers.GetClubByID)
+	auth.POST("/clubs", handlers.CreateClub)
+	auth.PUT("/clubs", handlers.UpdateClub)
+	auth.GET("/clubs/:id/shells", handlers.GetShellsByClub)
+	auth.GET("/clubs/:id/groups", handlers.GetGroupsByClub)
 
 	// SHELL
-	v1.GET("/shells/:id", handlers.GetShellByID)
-	v1.POST("/shells", handlers.CreateShell)
-	v1.PUT("/shells", handlers.UpdateShell)
-	v1.GET("/shells/:id/rentals", handlers.GetRentalsByShell)
+	auth.GET("/shells/:id", handlers.GetShellByID)
+	auth.POST("/shells", handlers.CreateShell)
+	auth.PUT("/shells", handlers.UpdateShell)
+	auth.GET("/shells/:id/rentals", handlers.GetRentalsByShell)
 
 	// GROUP (ie adult, junior, novice)
-	v1.GET("/groups/:id", handlers.GetGroupByID)
-	v1.POST("/groups", handlers.CreateGroup)
-	v1.PUT("/groups", handlers.UpdateGroup)
-	v1.GET("/groups/:id/rowers", handlers.GetRowersByGroup)
+	auth.GET("/groups/:id", handlers.GetGroupByID)
+	auth.POST("/groups", handlers.CreateGroup)
+	auth.PUT("/groups", handlers.UpdateGroup)
+	auth.GET("/groups/:id/rowers", handlers.GetRowersByGroup)
 
 	// ROWER
-	v1.GET("/rowers/:id", handlers.GetRowerByID)
-	v1.POST("/rowers", handlers.CreateRower)
-	v1.PUT("/rowers", handlers.UpdateRower)
+	auth.GET("/rowers/:id", handlers.GetRowerByID)
+	auth.POST("/rowers", handlers.CreateRower)
+	auth.PUT("/rowers", handlers.UpdateRower)
 
 	// RENTAL
-	v1.GET("/rentals", handlers.GetRentals)
-	v1.GET("/rentals/:id", handlers.GetRentalByID)
-	v1.POST("/rentals", handlers.CreateRental)
-	v1.PUT("/rentals", handlers.UpdateRental)
-	v1.DELETE("/rentals/:id", handlers.DeleteRental)
-	v1.GET("/rentals/:id/rowers", handlers.GetRentalRowersByRental)
+	auth.GET("/rentals", handlers.GetRentals)
+	auth.GET("/rentals/:id", handlers.GetRentalByID)
+	auth.POST("/rentals", handlers.CreateRental)
+	auth.PUT("/rentals", handlers.UpdateRental)
+	auth.DELETE("/rentals/:id", handlers.DeleteRental)
+	auth.GET("/rentals/:id/rowers", handlers.GetRentalRowersByRental)
 
 	// RENTAL ROWERS
-	v1.GET("/rental-rowers/:id", handlers.GetRentalRowerByID)
-	v1.POST("/rental-rowers", handlers.CreateRentalRower)
-	v1.PUT("/rental-rowers", handlers.UpdateRentalRower)
-	v1.DELETE("/rental-rowers/:id", handlers.DeleteRentalRower)
+	auth.GET("/rental-rowers/:id", handlers.GetRentalRowerByID)
+	auth.POST("/rental-rowers", handlers.CreateRentalRower)
+	auth.PUT("/rental-rowers", handlers.UpdateRentalRower)
+	auth.DELETE("/rental-rowers/:id", handlers.DeleteRentalRower)
 
 	// TIME TRIAL
 	v1.GET("/time-trials", handlers.GetTimeTrials)
@@ -123,6 +125,8 @@ func main() {
 	v1.POST("/boats", handlers.CreateBoat)
 	v1.PUT("/boats", handlers.UpdateBoat)
 	v1.GET("/weather", handlers.AddWeatherToTimeTrial)
+
+	v1.POST("/authenticate", handlers.Authenticate)
 
 	lp := fmt.Sprintf(":%s", port)
 	log.WithField("message", fmt.Sprintf("Server Started On Port: %s", port)).Info()

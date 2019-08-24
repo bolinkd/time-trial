@@ -33,6 +33,7 @@ type DatabaseInterface interface {
 	ShellDBInterface
 	RentalDBInterface
 	RentalRowerDBInterface
+	AuthDBInterface
 	GetTransactor() (boil.Transactor, error)
 }
 

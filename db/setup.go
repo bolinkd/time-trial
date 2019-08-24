@@ -11,4 +11,5 @@ var (
 	_          RowerDBInterface        = connection
 	_          ShellDBInterface        = connection
 	_          TimeTrialDBInterface    = connection
+	_          AuthDBInterface         = connection
 )

@@ -14,4 +14,5 @@ var (
 	ErrShellNotFound        AppError = errors.New("shell not found")
 	ErrRentalNotFound       AppError = errors.New("rental not found")
 	ErrRentalRowerNotFound  AppError = errors.New("rental rower not found")
+	ErrAuthNotFound         AppError = errors.New("auth not found")
 )
