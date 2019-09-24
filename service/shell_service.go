@@ -8,14 +8,19 @@ import (
 )
 
 type ShellServiceInterface interface {
-	GetShellsByClub(db db.DatabaseInterface, clubID int) (models.ShellSlice, error)
+	GetShellsByOrganization(db db.DatabaseInterface, orgID int) (models.ShellSlice, error)
+	GetShellsByGroup(db db.DatabaseInterface, groupID int) (models.ShellSlice, error)
 	GetShellByID(db db.DatabaseInterface, shellID int) (*models.Shell, error)
 	CreateShell(db db.DatabaseInterface, shell *models.Shell) error
 	UpdateShell(db db.DatabaseInterface, shell *models.Shell) error
 }
 
-func (Services) GetShellsByClub(db db.DatabaseInterface, clubID int) (models.ShellSlice, error) {
-	return db.FindShellsByClubID(nil, clubID)
+func (Services) GetShellsByOrganization(db db.DatabaseInterface, orgID int) (models.ShellSlice, error) {
+	return db.FindShellsByOrganizationID(nil, orgID)
+}
+
+func (Services) GetShellsByGroup(db db.DatabaseInterface, groupID int) (models.ShellSlice, error) {
+	return db.FindShellsByGroupID(nil, groupID)
 }
 
 func (Services) GetShellByID(db db.DatabaseInterface, shellID int) (*models.Shell, error) {

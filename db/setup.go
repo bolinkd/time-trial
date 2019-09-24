@@ -3,7 +3,6 @@ package db
 var (
 	connection DatabaseInterface       = Connection{}
 	_          BoatDBInterface         = connection
-	_          ClubDBInterface         = connection
 	_          GroupDBInterface        = connection
 	_          OrganizationDBInterface = connection
 	_          RentalRowerDBInterface  = connection

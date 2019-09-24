@@ -35,15 +35,15 @@ func (o *Organization) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(&struct {
 		*models.Organization
-		Clubs models.ClubSlice `json:"clubs,omitempty"`
+		Groups models.GroupSlice `json:"groups,omitempty"`
 	}{
 		Organization: o.Organization,
-		Clubs:        o.R.Clubs,
+		Groups:       o.R.Groups,
 	})
 }
 
 func (os OrganizationSlice) MarshalJSON() ([]byte, error) {
-	var osd []*Organization
+	osd := make([]*Organization, 0)
 	for _, o := range os.OrganizationSlice {
 		osd = append(osd, &Organization{o})
 	}

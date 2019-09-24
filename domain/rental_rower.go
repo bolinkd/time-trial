@@ -45,7 +45,7 @@ func (r *RentalRower) MarshalJSON() ([]byte, error) {
 }
 
 func (rs RentalRowerSlice) MarshalJSON() ([]byte, error) {
-	var rsd []*RentalRower
+	rsd := make([]*RentalRower, 0)
 	for _, r := range rs.RentalRowerSlice {
 		rsd = append(rsd, &RentalRower{r})
 	}

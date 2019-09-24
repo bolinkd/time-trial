@@ -21,7 +21,7 @@ func (Services) GetOrganizations(db db.DatabaseInterface) (models.OrganizationSl
 
 func (Services) GetOrganizationByID(db db.DatabaseInterface, organizationID int) (*models.Organization, error) {
 	org, err := db.FindOrganizationByID(nil, organizationID, []qm.QueryMod{
-		qm.Load(models.OrganizationRels.Clubs),
+		qm.Load(models.OrganizationRels.Groups),
 	})
 	if err == sql.ErrNoRows {
 		return nil, domain.ErrOrganizationNotFound

@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"github.com/bolinkd/time-trial/db"
 	"github.com/bolinkd/time-trial/domain"
 	"github.com/gin-gonic/gin"
@@ -17,7 +16,6 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(token)
 	database := GetDatabase(c).(db.AuthDBInterface)
 
 	valid, err := database.ValidateAuthToken(nil, orgID, token)

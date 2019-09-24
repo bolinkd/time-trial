@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	ErrInvalidGroup = errors.New("invalid group")
+	ErrInvalidGroupClubID = errors.New("invalid group")
 )
 
 type Group struct {
@@ -19,8 +19,8 @@ type GroupSlice struct {
 }
 
 func (g Group) Validate() error {
-	if !g.ClubID.Valid {
-		return ErrInvalidGroup
+	if !g.OrganizationID.Valid {
+		return ErrInvalidGroupClubID
 	}
 	return nil
 }
@@ -31,17 +31,18 @@ func (g *Group) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(&struct {
 		*models.Group
-		Rowers models.RowerSlice `json:"rowers,omitempty"`
-		Club   *models.Club      `json:"club,omitempty"`
+		Rowers    models.RowerSlice `json:"rowers,omitempty"`
+		Parent    *models.Group     `json:"parent,omitempty"`
+		SubGroups models.GroupSlice `json:"sub_groups,omitempty"`
 	}{
-		Group:  g.Group,
-		Rowers: g.R.GroupRowers,
-		Club:   g.R.Club,
+		Group:     g.Group,
+		Parent:    g.R.Parent,
+		SubGroups: g.R.ParentGroups,
 	})
 }
 
 func (gs GroupSlice) MarshalJSON() ([]byte, error) {
-	var gsd []*Group
+	gsd := make([]*Group, 0)
 	for _, g := range gs.GroupSlice {
 		gsd = append(gsd, &Group{g})
 	}

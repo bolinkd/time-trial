@@ -8,7 +8,7 @@ import (
 
 var (
 	ErrInvalidShellName           AppError = errors.New("invalid shell name")
-	ErrInvalidShellClubID         AppError = errors.New("invalid shell club id")
+	ErrInvalidShellGroupID        AppError = errors.New("invalid shell group id")
 	ErrInvalidShellType           AppError = errors.New("invalid shell type")
 	ErrInvalidShellTypeOutOfRange AppError = errors.New("invalid shell type - not in range")
 )
@@ -34,8 +34,8 @@ func (s Shell) Validate() error {
 	if !s.Name.Valid {
 		return ErrInvalidShellName
 	}
-	if !s.ClubID.Valid {
-		return ErrInvalidShellClubID
+	if !s.GroupID.Valid {
+		return ErrInvalidShellGroupID
 	}
 	if !s.Type.Valid {
 		return ErrInvalidShellType
@@ -51,17 +51,17 @@ func (s *Shell) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(&struct {
 		*models.Shell
-		Club    *models.Club       `json:"club,omitempty"`
+		Group   *models.Group      `json:"group,omitempty"`
 		Rentals models.RentalSlice `json:"rentals,omitempty"`
 	}{
 		Shell:   s.Shell,
-		Club:    s.R.Club,
+		Group:   s.R.Group,
 		Rentals: s.R.Rentals,
 	})
 }
 
 func (ss ShellSlice) MarshalJSON() ([]byte, error) {
-	var ssd []*Shell
+	ssd := make([]*Shell, 0)
 	for _, s := range ss.ShellSlice {
 		ssd = append(ssd, &Shell{s})
 	}

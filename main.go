@@ -55,7 +55,7 @@ func main() {
 		srv.SocketServiceHandler,
 		srv.ServicesHandler,
 		middleware.RecoveryHandler,
-		// middleware.LoggingMiddleware,
+		middleware.LoggingMiddleware,
 	)
 
 	socket.InitSocketServer(router)
@@ -68,33 +68,29 @@ func main() {
 
 	// ORGANIZATION
 	v1.GET("/organizations", handlers.GetOrganizations)
-
 	auth := v1.Group("/").Use(middleware.AuthMiddleware)
+	auth.GET("organization", handlers.GetCurrentOrganization)
 	auth.GET("/organizations/:id", handlers.GetOrganizationByID)
 	auth.POST("/organizations", handlers.CreateOrganization)
 	auth.PUT("/organizations", handlers.UpdateOrganization)
-	auth.GET("/organizations/:id/clubs", handlers.GetClubsByOrganization)
-
-	// CLUB
-	auth.GET("/clubs/:id", handlers.GetClubByID)
-	auth.POST("/clubs", handlers.CreateClub)
-	auth.PUT("/clubs", handlers.UpdateClub)
-	auth.GET("/clubs/:id/shells", handlers.GetShellsByClub)
-	auth.GET("/clubs/:id/groups", handlers.GetGroupsByClub)
 
 	// SHELL
+	auth.GET("/shells", handlers.GetShellsByCurrentOrganization)
 	auth.GET("/shells/:id", handlers.GetShellByID)
 	auth.POST("/shells", handlers.CreateShell)
 	auth.PUT("/shells", handlers.UpdateShell)
 	auth.GET("/shells/:id/rentals", handlers.GetRentalsByShell)
 
 	// GROUP (ie adult, junior, novice)
+	auth.GET("/groups", handlers.GetGroupsByCurrentOrganization)
 	auth.GET("/groups/:id", handlers.GetGroupByID)
 	auth.POST("/groups", handlers.CreateGroup)
 	auth.PUT("/groups", handlers.UpdateGroup)
 	auth.GET("/groups/:id/rowers", handlers.GetRowersByGroup)
+	auth.GET("/groups/:id/shells", handlers.GetShellsByGroup)
 
 	// ROWER
+	auth.GET("/rowers", handlers.GetRowersByCurrentOrganization)
 	auth.GET("/rowers/:id", handlers.GetRowerByID)
 	auth.POST("/rowers", handlers.CreateRower)
 	auth.PUT("/rowers", handlers.UpdateRower)
@@ -110,7 +106,6 @@ func main() {
 	// RENTAL ROWERS
 	auth.GET("/rental-rowers/:id", handlers.GetRentalRowerByID)
 	auth.POST("/rental-rowers", handlers.CreateRentalRower)
-	auth.PUT("/rental-rowers", handlers.UpdateRentalRower)
 	auth.DELETE("/rental-rowers/:id", handlers.DeleteRentalRower)
 
 	// TIME TRIAL

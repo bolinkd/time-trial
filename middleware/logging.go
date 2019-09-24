@@ -13,7 +13,7 @@ func LoggingMiddleware(c *gin.Context) {
 	url := c.Request.URL.Path
 
 	// don't log pings
-	if strings.Compare(url, "/") != 0 {
+	if strings.Compare(url, "/") != 0 && strings.Compare(url, "/socket.io/") != 0 {
 		fields["url"] = url
 		if c.Request != nil && c.Request.Body != nil {
 			buf, _ := ioutil.ReadAll(c.Request.Body)

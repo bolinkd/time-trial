@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"strconv"
 )
 
 func UnexpectedError(context *gin.Context, err error) {
@@ -30,4 +31,8 @@ func BadRequest(context *gin.Context, str string) {
 
 func Forbidden(context *gin.Context) {
 	context.JSON(http.StatusForbidden, domain.Message("Unauthorized"))
+}
+
+func getCurrentOrganizationID(context *gin.Context) (int, error) {
+	return strconv.Atoi(context.Request.Header.Get("Organization"))
 }

@@ -43,7 +43,7 @@ func (b *Boat) MarshalJSON() ([]byte, error) {
 }
 
 func (bs BoatSlice) MarshalJSON() ([]byte, error) {
-	var bsd []*Boat
+	bsd := make([]*Boat, 0)
 	for _, b := range bs.BoatSlice {
 		bsd = append(bsd, &Boat{b})
 	}

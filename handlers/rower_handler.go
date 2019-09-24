@@ -18,7 +18,7 @@ func GetRowersByGroup(context *gin.Context) {
 		return
 	}
 
-	rowers, err := services.GetRowersByGroupID(database, groupID)
+	rowers, err := services.GetRowersByGroup(database, groupID)
 	if err != nil {
 		if _, ok := err.(domain.AppError); ok {
 			BadRequest(context, err.Error())
@@ -27,6 +27,30 @@ func GetRowersByGroup(context *gin.Context) {
 		}
 	}
 	Ok(context, rowers)
+}
+
+func GetRowersByCurrentOrganization(context *gin.Context) {
+	database := middleware.GetDatabase(context)
+	services := middleware.GetServices(context)
+
+	orgID, err := getCurrentOrganizationID(context)
+	if err != nil {
+		BadRequest(context, err.Error())
+		return
+	}
+
+	rowers, err := services.GetRowersByOrganization(database, orgID)
+	if err != nil {
+		if _, ok := err.(domain.AppError); ok {
+			BadRequest(context, err.Error())
+		} else {
+			UnexpectedError(context, err)
+		}
+		return
+	}
+	Ok(context, domain.RowerSlice{
+		RowerSlice: rowers,
+	})
 }
 
 func GetRowerByID(context *gin.Context) {

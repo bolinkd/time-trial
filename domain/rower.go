@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	ErrInvalidRowerFirstName AppError = errors.New("invalid rower first name")
-	ErrInvalidRowerLastName  AppError = errors.New("invalid rower last name")
-	ErrInvalidRowerGroupID   AppError = errors.New("invalid rower group id")
+	ErrInvalidRowerFirstName      AppError = errors.New("invalid rower first name")
+	ErrInvalidRowerLastName       AppError = errors.New("invalid rower last name")
+	ErrInvalidRowerOrganizationID AppError = errors.New("invalid rower organization id")
 )
 
 type Rower struct {
@@ -27,8 +27,8 @@ func (r Rower) Validate() error {
 	if !r.LastName.Valid {
 		return ErrInvalidRowerLastName
 	}
-	if !r.GroupID.Valid {
-		return ErrInvalidRowerGroupID
+	if !r.OrganizationID.Valid {
+		return ErrInvalidRowerOrganizationID
 	}
 	return nil
 }
@@ -40,16 +40,16 @@ func (r *Rower) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		*models.Rower
 		RentalRowers models.RentalRowerSlice `json:"rental_rowers,omitempty"`
-		Group        *models.Group           `json:"group,omitempty"`
+		Organization *models.Organization    `json:"group,omitempty"`
 	}{
 		Rower:        r.Rower,
 		RentalRowers: r.R.RentalRowers,
-		Group:        r.R.Group,
+		Organization: r.R.Organization,
 	})
 }
 
 func (rs RowerSlice) MarshalJSON() ([]byte, error) {
-	var rsd []*Rower
+	rsd := make([]*Rower, 0)
 	for _, r := range rs.RowerSlice {
 		rsd = append(rsd, &Rower{r})
 	}

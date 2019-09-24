@@ -8,17 +8,30 @@ import (
 )
 
 type ShellDBInterface interface {
-	FindShellsByClubID(tx boil.Executor, clubID int) (models.ShellSlice, error)
+	FindShellsByOrganizationID(tx boil.Executor, orgID int) (models.ShellSlice, error)
+	FindShellsByGroupID(tx boil.Executor, groupID int) (models.ShellSlice, error)
 	FindShellByID(tx boil.Executor, id int) (*models.Shell, error)
 	AddShell(tx boil.Executor, shell *models.Shell) error
 	UpdateShell(tx boil.Executor, shell *models.Shell) error
 }
 
-func (conn Connection) FindShellsByClubID(tx boil.Executor, clubID int) (models.ShellSlice, error) {
+func (conn Connection) FindShellsByOrganizationID(tx boil.Executor, orgID int) (models.ShellSlice, error) {
 	if tx == nil {
 		tx = conn.DB
 	}
-	return models.Shells(qm.Where("club_id = ?", clubID)).All(tx)
+	queries := []qm.QueryMod{
+		qm.InnerJoin(`"Group" g on shell.group_id = g.id`),
+		qm.InnerJoin("organization o on g.organization_id = o.id"),
+		qm.Where("o.id = ?", orgID),
+	}
+	return models.Shells(queries...).All(tx)
+}
+
+func (conn Connection) FindShellsByGroupID(tx boil.Executor, groupID int) (models.ShellSlice, error) {
+	if tx == nil {
+		tx = conn.DB
+	}
+	return models.Shells(qm.Where("group_id = ?", groupID)).All(tx)
 }
 
 func (conn Connection) FindShellByID(tx boil.Executor, id int) (*models.Shell, error) {

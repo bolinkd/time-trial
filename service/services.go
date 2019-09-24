@@ -6,7 +6,6 @@ type ServicesInterface interface {
 	TimeTrialServiceInterface
 	BoatServiceInterface
 	OrganizationServiceInterface
-	ClubServiceInterface
 	GroupServiceInterface
 	RowerServiceInterface
 	ShellServiceInterface

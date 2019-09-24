@@ -10,9 +10,11 @@ package mysql
 
 import (
 	"bytes"
+	"crypto/rsa"
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"math/big"
 	"net"
 	"net/url"
 	"sort"
@@ -41,6 +43,8 @@ type Config struct {
 	Collation        string            // Connection collation
 	Loc              *time.Location    // Location for time.Time values
 	MaxAllowedPacket int               // Max packet size allowed
+	ServerPubKey     string            // Server public key name
+	pubKey           *rsa.PublicKey    // Server public key
 	TLSConfig        string            // TLS configuration name
 	tls              *tls.Config       // TLS configuration
 	Timeout          time.Duration     // Dial timeout
@@ -67,6 +71,26 @@ func NewConfig() *Config {
 		MaxAllowedPacket:     defaultMaxAllowedPacket,
 		AllowNativePasswords: true,
 	}
+}
+
+func (cfg *Config) Clone() *Config {
+	cp := *cfg
+	if cp.tls != nil {
+		cp.tls = cfg.tls.Clone()
+	}
+	if len(cp.Params) > 0 {
+		cp.Params = make(map[string]string, len(cfg.Params))
+		for k, v := range cfg.Params {
+			cp.Params[k] = v
+		}
+	}
+	if cfg.pubKey != nil {
+		cp.pubKey = &rsa.PublicKey{
+			N: new(big.Int).Set(cfg.pubKey.N),
+			E: cfg.pubKey.E,
+		}
+	}
+	return &cp
 }
 
 func (cfg *Config) normalize() error {
@@ -252,6 +276,16 @@ func (cfg *Config) FormatDSN() string {
 			hasParam = true
 			buf.WriteString("?rejectReadOnly=true")
 		}
+	}
+
+	if len(cfg.ServerPubKey) > 0 {
+		if hasParam {
+			buf.WriteString("&serverPubKey=")
+		} else {
+			hasParam = true
+			buf.WriteString("?serverPubKey=")
+		}
+		buf.WriteString(url.QueryEscape(cfg.ServerPubKey))
 	}
 
 	if cfg.Timeout > 0 {
@@ -512,6 +546,20 @@ func parseDSNParams(cfg *Config, params string) (err error) {
 				return errors.New("invalid bool value: " + value)
 			}
 
+		// Server public key
+		case "serverPubKey":
+			name, err := url.QueryUnescape(value)
+			if err != nil {
+				return fmt.Errorf("invalid value for server pub key name: %v", err)
+			}
+
+			if pubKey := getServerPubKey(name); pubKey != nil {
+				cfg.ServerPubKey = name
+				cfg.pubKey = pubKey
+			} else {
+				return errors.New("invalid value / unknown server pub key name: " + name)
+			}
+
 		// Strict mode
 		case "strict":
 			panic("strict mode has been removed. See https://github.com/go-sql-driver/mysql/wiki/strict-mode")
@@ -533,7 +581,7 @@ func parseDSNParams(cfg *Config, params string) (err error) {
 				} else {
 					cfg.TLSConfig = "false"
 				}
-			} else if vl := strings.ToLower(value); vl == "skip-verify" {
+			} else if vl := strings.ToLower(value); vl == "skip-verify" || vl == "preferred" {
 				cfg.TLSConfig = vl
 				cfg.tls = &tls.Config{InsecureSkipVerify: true}
 			} else {

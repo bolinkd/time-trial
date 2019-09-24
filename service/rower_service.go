@@ -8,13 +8,18 @@ import (
 )
 
 type RowerServiceInterface interface {
-	GetRowersByGroupID(db db.DatabaseInterface, groupID int) (models.RowerSlice, error)
+	GetRowersByOrganization(db db.DatabaseInterface, orgID int) (models.RowerSlice, error)
+	GetRowersByGroup(db db.DatabaseInterface, groupID int) (models.RowerSlice, error)
 	GetRowerByID(db db.DatabaseInterface, id int) (*models.Rower, error)
 	CreateRower(db db.DatabaseInterface, rower *models.Rower) error
 	UpdateRower(db db.DatabaseInterface, rower *models.Rower) error
 }
 
-func (Services) GetRowersByGroupID(db db.DatabaseInterface, groupID int) (models.RowerSlice, error) {
+func (Services) GetRowersByOrganization(db db.DatabaseInterface, orgID int) (models.RowerSlice, error) {
+	return db.FindRowersByOrganizationID(nil, orgID)
+}
+
+func (Services) GetRowersByGroup(db db.DatabaseInterface, groupID int) (models.RowerSlice, error) {
 	return db.FindRowersByGroupID(nil, groupID)
 }
 

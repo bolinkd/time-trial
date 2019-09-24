@@ -3,7 +3,6 @@ package service
 var (
 	services ServicesInterface            = Services{}
 	_        BoatServiceInterface         = services
-	_        ClubServiceInterface         = services
 	_        GroupServiceInterface        = services
 	_        OrganizationServiceInterface = services
 	_        RentalRowerServiceInterface  = services

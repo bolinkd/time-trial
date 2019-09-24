@@ -23,6 +23,29 @@ func GetOrganizations(context *gin.Context) {
 	Ok(context, domain.OrganizationSlice{orgs})
 }
 
+func GetCurrentOrganization(context *gin.Context) {
+	database := middleware.GetDatabase(context)
+	services := middleware.GetServices(context)
+
+	orgID, err := getCurrentOrganizationID(context)
+	if err != nil {
+		BadRequest(context, err.Error())
+		return
+	}
+
+	org, err := services.GetOrganizationByID(database, orgID)
+	if err != nil {
+		if _, ok := err.(domain.AppError); ok {
+			BadRequest(context, err.Error())
+		} else {
+			UnexpectedError(context, err)
+		}
+	}
+	Ok(context, &domain.Organization{
+		Organization: org,
+	})
+}
+
 func GetOrganizationByID(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 	services := middleware.GetServices(context)

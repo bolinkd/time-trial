@@ -26,9 +26,9 @@ type Shell struct {
 	ID        int         `boil:"id" json:"id" toml:"id" yaml:"id"`
 	Name      null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
 	Type      null.Int    `boil:"type" json:"type,omitempty" toml:"type" yaml:"type,omitempty"`
-	ClubID    null.Int    `boil:"club_id" json:"club_id,omitempty" toml:"club_id" yaml:"club_id,omitempty"`
 	CreatedAt time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	GroupID   null.Int    `boil:"group_id" json:"group_id,omitempty" toml:"group_id" yaml:"group_id,omitempty"`
 
 	R *shellR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L shellL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -38,16 +38,16 @@ var ShellColumns = struct {
 	ID        string
 	Name      string
 	Type      string
-	ClubID    string
 	CreatedAt string
 	UpdatedAt string
+	GroupID   string
 }{
 	ID:        "id",
 	Name:      "name",
 	Type:      "type",
-	ClubID:    "club_id",
 	CreatedAt: "created_at",
 	UpdatedAt: "updated_at",
+	GroupID:   "group_id",
 }
 
 // Generated where
@@ -56,30 +56,30 @@ var ShellWhere = struct {
 	ID        whereHelperint
 	Name      whereHelpernull_String
 	Type      whereHelpernull_Int
-	ClubID    whereHelpernull_Int
 	CreatedAt whereHelpertime_Time
 	UpdatedAt whereHelpertime_Time
+	GroupID   whereHelpernull_Int
 }{
 	ID:        whereHelperint{field: `id`},
 	Name:      whereHelpernull_String{field: `name`},
 	Type:      whereHelpernull_Int{field: `type`},
-	ClubID:    whereHelpernull_Int{field: `club_id`},
 	CreatedAt: whereHelpertime_Time{field: `created_at`},
 	UpdatedAt: whereHelpertime_Time{field: `updated_at`},
+	GroupID:   whereHelpernull_Int{field: `group_id`},
 }
 
 // ShellRels is where relationship names are stored.
 var ShellRels = struct {
-	Club    string
+	Group   string
 	Rentals string
 }{
-	Club:    "Club",
+	Group:   "Group",
 	Rentals: "Rentals",
 }
 
 // shellR is where relationships are stored.
 type shellR struct {
-	Club    *Club
+	Group   *Group
 	Rentals RentalSlice
 }
 
@@ -92,8 +92,8 @@ func (*shellR) NewStruct() *shellR {
 type shellL struct{}
 
 var (
-	shellColumns               = []string{"id", "name", "type", "club_id", "created_at", "updated_at"}
-	shellColumnsWithoutDefault = []string{"name", "type", "club_id", "created_at", "updated_at"}
+	shellColumns               = []string{"id", "name", "type", "created_at", "updated_at", "group_id"}
+	shellColumnsWithoutDefault = []string{"name", "type", "created_at", "updated_at", "group_id"}
 	shellColumnsWithDefault    = []string{"id"}
 	shellPrimaryKeyColumns     = []string{"id"}
 )
@@ -357,16 +357,16 @@ func (q shellQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
-// Club pointed to by the foreign key.
-func (o *Shell) Club(mods ...qm.QueryMod) clubQuery {
+// Group pointed to by the foreign key.
+func (o *Shell) Group(mods ...qm.QueryMod) groupQuery {
 	queryMods := []qm.QueryMod{
-		qm.Where("id=?", o.ClubID),
+		qm.Where("id=?", o.GroupID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := Clubs(queryMods...)
-	queries.SetFrom(query.Query, "\"club\"")
+	query := Groups(queryMods...)
+	queries.SetFrom(query.Query, "\"Group\"")
 
 	return query
 }
@@ -392,9 +392,9 @@ func (o *Shell) Rentals(mods ...qm.QueryMod) rentalQuery {
 	return query
 }
 
-// LoadClub allows an eager lookup of values, cached into the
+// LoadGroup allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (shellL) LoadClub(e boil.Executor, singular bool, maybeShell interface{}, mods queries.Applicator) error {
+func (shellL) LoadGroup(e boil.Executor, singular bool, maybeShell interface{}, mods queries.Applicator) error {
 	var slice []*Shell
 	var object *Shell
 
@@ -409,8 +409,8 @@ func (shellL) LoadClub(e boil.Executor, singular bool, maybeShell interface{}, m
 		if object.R == nil {
 			object.R = &shellR{}
 		}
-		if !queries.IsNil(object.ClubID) {
-			args = append(args, object.ClubID)
+		if !queries.IsNil(object.GroupID) {
+			args = append(args, object.GroupID)
 		}
 
 	} else {
@@ -421,13 +421,13 @@ func (shellL) LoadClub(e boil.Executor, singular bool, maybeShell interface{}, m
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.ClubID) {
+				if queries.Equal(a, obj.GroupID) {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.ClubID) {
-				args = append(args, obj.ClubID)
+			if !queries.IsNil(obj.GroupID) {
+				args = append(args, obj.GroupID)
 			}
 
 		}
@@ -437,26 +437,26 @@ func (shellL) LoadClub(e boil.Executor, singular bool, maybeShell interface{}, m
 		return nil
 	}
 
-	query := NewQuery(qm.From(`club`), qm.WhereIn(`id in ?`, args...))
+	query := NewQuery(qm.From(`Group`), qm.WhereIn(`id in ?`, args...))
 	if mods != nil {
 		mods.Apply(query)
 	}
 
 	results, err := query.Query(e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load Club")
+		return errors.Wrap(err, "failed to eager load Group")
 	}
 
-	var resultSlice []*Club
+	var resultSlice []*Group
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Club")
+		return errors.Wrap(err, "failed to bind eager loaded slice Group")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for club")
+		return errors.Wrap(err, "failed to close results of eager load for Group")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for club")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for Group")
 	}
 
 	if len(shellAfterSelectHooks) != 0 {
@@ -473,22 +473,22 @@ func (shellL) LoadClub(e boil.Executor, singular bool, maybeShell interface{}, m
 
 	if singular {
 		foreign := resultSlice[0]
-		object.R.Club = foreign
+		object.R.Group = foreign
 		if foreign.R == nil {
-			foreign.R = &clubR{}
+			foreign.R = &groupR{}
 		}
-		foreign.R.Shells = append(foreign.R.Shells, object)
+		foreign.R.GroupShells = append(foreign.R.GroupShells, object)
 		return nil
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.ClubID, foreign.ID) {
-				local.R.Club = foreign
+			if queries.Equal(local.GroupID, foreign.ID) {
+				local.R.Group = foreign
 				if foreign.R == nil {
-					foreign.R = &clubR{}
+					foreign.R = &groupR{}
 				}
-				foreign.R.Shells = append(foreign.R.Shells, local)
+				foreign.R.GroupShells = append(foreign.R.GroupShells, local)
 				break
 			}
 		}
@@ -592,18 +592,18 @@ func (shellL) LoadRentals(e boil.Executor, singular bool, maybeShell interface{}
 	return nil
 }
 
-// SetClubG of the shell to the related item.
-// Sets o.R.Club to related.
-// Adds o to related.R.Shells.
+// SetGroupG of the shell to the related item.
+// Sets o.R.Group to related.
+// Adds o to related.R.GroupShells.
 // Uses the global database handle.
-func (o *Shell) SetClubG(insert bool, related *Club) error {
-	return o.SetClub(boil.GetDB(), insert, related)
+func (o *Shell) SetGroupG(insert bool, related *Group) error {
+	return o.SetGroup(boil.GetDB(), insert, related)
 }
 
-// SetClub of the shell to the related item.
-// Sets o.R.Club to related.
-// Adds o to related.R.Shells.
-func (o *Shell) SetClub(exec boil.Executor, insert bool, related *Club) error {
+// SetGroup of the shell to the related item.
+// Sets o.R.Group to related.
+// Adds o to related.R.GroupShells.
+func (o *Shell) SetGroup(exec boil.Executor, insert bool, related *Group) error {
 	var err error
 	if insert {
 		if err = related.Insert(exec, boil.Infer()); err != nil {
@@ -613,7 +613,7 @@ func (o *Shell) SetClub(exec boil.Executor, insert bool, related *Club) error {
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"shell\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"club_id"}),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"group_id"}),
 		strmangle.WhereClause("\"", "\"", 2, shellPrimaryKeyColumns),
 	)
 	values := []interface{}{related.ID, o.ID}
@@ -627,60 +627,60 @@ func (o *Shell) SetClub(exec boil.Executor, insert bool, related *Club) error {
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.ClubID, related.ID)
+	queries.Assign(&o.GroupID, related.ID)
 	if o.R == nil {
 		o.R = &shellR{
-			Club: related,
+			Group: related,
 		}
 	} else {
-		o.R.Club = related
+		o.R.Group = related
 	}
 
 	if related.R == nil {
-		related.R = &clubR{
-			Shells: ShellSlice{o},
+		related.R = &groupR{
+			GroupShells: ShellSlice{o},
 		}
 	} else {
-		related.R.Shells = append(related.R.Shells, o)
+		related.R.GroupShells = append(related.R.GroupShells, o)
 	}
 
 	return nil
 }
 
-// RemoveClubG relationship.
-// Sets o.R.Club to nil.
+// RemoveGroupG relationship.
+// Sets o.R.Group to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
 // Uses the global database handle.
-func (o *Shell) RemoveClubG(related *Club) error {
-	return o.RemoveClub(boil.GetDB(), related)
+func (o *Shell) RemoveGroupG(related *Group) error {
+	return o.RemoveGroup(boil.GetDB(), related)
 }
 
-// RemoveClub relationship.
-// Sets o.R.Club to nil.
+// RemoveGroup relationship.
+// Sets o.R.Group to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
-func (o *Shell) RemoveClub(exec boil.Executor, related *Club) error {
+func (o *Shell) RemoveGroup(exec boil.Executor, related *Group) error {
 	var err error
 
-	queries.SetScanner(&o.ClubID, nil)
-	if _, err = o.Update(exec, boil.Whitelist("club_id")); err != nil {
+	queries.SetScanner(&o.GroupID, nil)
+	if _, err = o.Update(exec, boil.Whitelist("group_id")); err != nil {
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.R.Club = nil
+	o.R.Group = nil
 	if related == nil || related.R == nil {
 		return nil
 	}
 
-	for i, ri := range related.R.Shells {
-		if queries.Equal(o.ClubID, ri.ClubID) {
+	for i, ri := range related.R.GroupShells {
+		if queries.Equal(o.GroupID, ri.GroupID) {
 			continue
 		}
 
-		ln := len(related.R.Shells)
+		ln := len(related.R.GroupShells)
 		if ln > 1 && i < ln-1 {
-			related.R.Shells[i] = related.R.Shells[ln-1]
+			related.R.GroupShells[i] = related.R.GroupShells[ln-1]
 		}
-		related.R.Shells = related.R.Shells[:ln-1]
+		related.R.GroupShells = related.R.GroupShells[:ln-1]
 		break
 	}
 	return nil

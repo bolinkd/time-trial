@@ -75,41 +75,17 @@ func CreateRentalRower(context *gin.Context) {
 	}
 }
 
-func UpdateRentalRower(context *gin.Context) {
-	database := middleware.GetDatabase(context)
-	services := middleware.GetServices(context)
-
-	var rower domain.Rower
-	err := decodeAndValidate(context, &rower)
-	if err != nil {
-		BadRequest(context, err.Error())
-		return
-	}
-
-	err = services.UpdateRower(database, rower.Rower)
-	if err != nil {
-		if _, ok := err.(domain.AppError); ok {
-			BadRequest(context, err.Error())
-		} else {
-			UnexpectedError(context, err)
-		}
-	} else {
-		Ok(context, rower)
-	}
-}
-
 func DeleteRentalRower(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 	services := middleware.GetServices(context)
 
-	var rower domain.Rower
-	err := decodeAndValidate(context, &rower)
+	id, err := strconv.Atoi(context.Param("id"))
 	if err != nil {
 		BadRequest(context, err.Error())
 		return
 	}
 
-	err = services.UpdateRower(database, rower.Rower)
+	err = services.DeleteRentalRower(database, id)
 	if err != nil {
 		if _, ok := err.(domain.AppError); ok {
 			BadRequest(context, err.Error())
@@ -117,6 +93,6 @@ func DeleteRentalRower(context *gin.Context) {
 			UnexpectedError(context, err)
 		}
 	} else {
-		Ok(context, rower)
+		Ok(context, "deleted")
 	}
 }

@@ -36,7 +36,7 @@ func (r *Rental) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		*models.Rental
 		Shell       *models.Shell           `json:"shell,omitempty"`
-		RentalUsers models.RentalRowerSlice `json:"rental_users,omitempty"`
+		RentalUsers models.RentalRowerSlice `json:"rental_rowers,omitempty"`
 	}{
 		Rental:      r.Rental,
 		Shell:       r.R.Shell,
@@ -45,7 +45,7 @@ func (r *Rental) MarshalJSON() ([]byte, error) {
 }
 
 func (rs RentalSlice) MarshalJSON() ([]byte, error) {
-	var rsd []*Rental
+	rsd := make([]*Rental, 0)
 	for _, r := range rs.RentalSlice {
 		rsd = append(rsd, &Rental{r})
 	}

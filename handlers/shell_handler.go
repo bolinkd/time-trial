@@ -8,17 +8,17 @@ import (
 	"strconv"
 )
 
-func GetShellsByClub(context *gin.Context) {
+func GetShellsByCurrentOrganization(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 	services := middleware.GetServices(context)
 
-	clubID, err := strconv.Atoi(context.Param("id"))
+	orgID, err := getCurrentOrganizationID(context)
 	if err != nil {
-		BadRequest(context, fmt.Sprintf("invalid id: %d", clubID))
+		BadRequest(context, err.Error())
 		return
 	}
 
-	shells, err := services.GetShellsByClub(database, clubID)
+	shells, err := services.GetShellsByOrganization(database, orgID)
 	if err != nil {
 		if _, ok := err.(domain.AppError); ok {
 			BadRequest(context, err.Error())
@@ -26,7 +26,32 @@ func GetShellsByClub(context *gin.Context) {
 			UnexpectedError(context, err)
 		}
 	}
-	Ok(context, shells)
+	Ok(context, domain.ShellSlice{
+		ShellSlice: shells,
+	})
+}
+
+func GetShellsByGroup(context *gin.Context) {
+	database := middleware.GetDatabase(context)
+	services := middleware.GetServices(context)
+
+	groupID, err := strconv.Atoi(context.Param("id"))
+	if err != nil {
+		BadRequest(context, fmt.Sprintf("invalid id: %d", groupID))
+		return
+	}
+
+	shells, err := services.GetShellsByGroup(database, groupID)
+	if err != nil {
+		if _, ok := err.(domain.AppError); ok {
+			BadRequest(context, err.Error())
+		} else {
+			UnexpectedError(context, err)
+		}
+	}
+	Ok(context, domain.ShellSlice{
+		ShellSlice: shells,
+	})
 }
 
 func GetShellByID(context *gin.Context) {

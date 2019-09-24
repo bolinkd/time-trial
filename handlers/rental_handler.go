@@ -13,9 +13,9 @@ func GetRentals(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 	services := middleware.GetServices(context)
 
-	orgID, err := strconv.Atoi(context.Query("org_id"))
+	orgID, err := getCurrentOrganizationID(context)
 	if err != nil {
-		BadRequest(context, "invalid organization id")
+		BadRequest(context, err.Error())
 		return
 	}
 
@@ -47,7 +47,9 @@ func GetRentals(context *gin.Context) {
 			UnexpectedError(context, err)
 		}
 	} else {
-		Ok(context, rentals)
+		Ok(context, domain.RentalSlice{
+			RentalSlice: rentals,
+		})
 	}
 }
 

@@ -47,7 +47,7 @@ func (tt *TimeTrial) MarshalJSON() ([]byte, error) {
 }
 
 func (tts TimeTrialSlice) MarshalJSON() ([]byte, error) {
-	var ttsd []*TimeTrial
+	ttsd := make([]*TimeTrial, 0)
 	for _, tt := range tts.TimeTrialSlice {
 		ttsd = append(ttsd, &TimeTrial{tt})
 	}

@@ -27,7 +27,6 @@ type DatabaseInterface interface {
 	TimeTrialDBInterface
 	BoatDBInterface
 	OrganizationDBInterface
-	ClubDBInterface
 	GroupDBInterface
 	RowerDBInterface
 	ShellDBInterface

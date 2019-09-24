@@ -65,17 +65,20 @@ var OrganizationWhere = struct {
 
 // OrganizationRels is where relationship names are stored.
 var OrganizationRels = struct {
-	Clubs             string
+	Groups            string
 	OrganizationAuths string
+	Rowers            string
 }{
-	Clubs:             "Clubs",
+	Groups:            "Groups",
 	OrganizationAuths: "OrganizationAuths",
+	Rowers:            "Rowers",
 }
 
 // organizationR is where relationships are stored.
 type organizationR struct {
-	Clubs             ClubSlice
+	Groups            GroupSlice
 	OrganizationAuths OrganizationAuthSlice
+	Rowers            RowerSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -352,22 +355,22 @@ func (q organizationQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
-// Clubs retrieves all the club's Clubs with an executor.
-func (o *Organization) Clubs(mods ...qm.QueryMod) clubQuery {
+// Groups retrieves all the Group's Groups with an executor.
+func (o *Organization) Groups(mods ...qm.QueryMod) groupQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"club\".\"organization_id\"=?", o.ID),
+		qm.Where("\"Group\".\"organization_id\"=?", o.ID),
 	)
 
-	query := Clubs(queryMods...)
-	queries.SetFrom(query.Query, "\"club\"")
+	query := Groups(queryMods...)
+	queries.SetFrom(query.Query, "\"Group\"")
 
 	if len(queries.GetSelect(query.Query)) == 0 {
-		queries.SetSelect(query.Query, []string{"\"club\".*"})
+		queries.SetSelect(query.Query, []string{"\"Group\".*"})
 	}
 
 	return query
@@ -394,9 +397,30 @@ func (o *Organization) OrganizationAuths(mods ...qm.QueryMod) organizationAuthQu
 	return query
 }
 
-// LoadClubs allows an eager lookup of values, cached into the
+// Rowers retrieves all the rower's Rowers with an executor.
+func (o *Organization) Rowers(mods ...qm.QueryMod) rowerQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"rower\".\"organization_id\"=?", o.ID),
+	)
+
+	query := Rowers(queryMods...)
+	queries.SetFrom(query.Query, "\"rower\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"rower\".*"})
+	}
+
+	return query
+}
+
+// LoadGroups allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (organizationL) LoadClubs(e boil.Executor, singular bool, maybeOrganization interface{}, mods queries.Applicator) error {
+func (organizationL) LoadGroups(e boil.Executor, singular bool, maybeOrganization interface{}, mods queries.Applicator) error {
 	var slice []*Organization
 	var object *Organization
 
@@ -433,29 +457,29 @@ func (organizationL) LoadClubs(e boil.Executor, singular bool, maybeOrganization
 		return nil
 	}
 
-	query := NewQuery(qm.From(`club`), qm.WhereIn(`organization_id in ?`, args...))
+	query := NewQuery(qm.From(`Group`), qm.WhereIn(`organization_id in ?`, args...))
 	if mods != nil {
 		mods.Apply(query)
 	}
 
 	results, err := query.Query(e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load club")
+		return errors.Wrap(err, "failed to eager load Group")
 	}
 
-	var resultSlice []*Club
+	var resultSlice []*Group
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice club")
+		return errors.Wrap(err, "failed to bind eager loaded slice Group")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on club")
+		return errors.Wrap(err, "failed to close results in eager load on Group")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for club")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for Group")
 	}
 
-	if len(clubAfterSelectHooks) != 0 {
+	if len(groupAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
 			if err := obj.doAfterSelectHooks(e); err != nil {
 				return err
@@ -463,10 +487,10 @@ func (organizationL) LoadClubs(e boil.Executor, singular bool, maybeOrganization
 		}
 	}
 	if singular {
-		object.R.Clubs = resultSlice
+		object.R.Groups = resultSlice
 		for _, foreign := range resultSlice {
 			if foreign.R == nil {
-				foreign.R = &clubR{}
+				foreign.R = &groupR{}
 			}
 			foreign.R.Organization = object
 		}
@@ -476,9 +500,9 @@ func (organizationL) LoadClubs(e boil.Executor, singular bool, maybeOrganization
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
 			if queries.Equal(local.ID, foreign.OrganizationID) {
-				local.R.Clubs = append(local.R.Clubs, foreign)
+				local.R.Groups = append(local.R.Groups, foreign)
 				if foreign.R == nil {
-					foreign.R = &clubR{}
+					foreign.R = &groupR{}
 				}
 				foreign.R.Organization = local
 				break
@@ -584,20 +608,115 @@ func (organizationL) LoadOrganizationAuths(e boil.Executor, singular bool, maybe
 	return nil
 }
 
-// AddClubsG adds the given related objects to the existing relationships
-// of the organization, optionally inserting them as new records.
-// Appends related to o.R.Clubs.
-// Sets related.R.Organization appropriately.
-// Uses the global database handle.
-func (o *Organization) AddClubsG(insert bool, related ...*Club) error {
-	return o.AddClubs(boil.GetDB(), insert, related...)
+// LoadRowers allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (organizationL) LoadRowers(e boil.Executor, singular bool, maybeOrganization interface{}, mods queries.Applicator) error {
+	var slice []*Organization
+	var object *Organization
+
+	if singular {
+		object = maybeOrganization.(*Organization)
+	} else {
+		slice = *maybeOrganization.(*[]*Organization)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &organizationR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &organizationR{}
+			}
+
+			for _, a := range args {
+				if queries.Equal(a, obj.ID) {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(qm.From(`rower`), qm.WhereIn(`organization_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load rower")
+	}
+
+	var resultSlice []*Rower
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice rower")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on rower")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for rower")
+	}
+
+	if len(rowerAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Rowers = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &rowerR{}
+			}
+			foreign.R.Organization = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if queries.Equal(local.ID, foreign.OrganizationID) {
+				local.R.Rowers = append(local.R.Rowers, foreign)
+				if foreign.R == nil {
+					foreign.R = &rowerR{}
+				}
+				foreign.R.Organization = local
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
-// AddClubs adds the given related objects to the existing relationships
+// AddGroupsG adds the given related objects to the existing relationships
 // of the organization, optionally inserting them as new records.
-// Appends related to o.R.Clubs.
+// Appends related to o.R.Groups.
 // Sets related.R.Organization appropriately.
-func (o *Organization) AddClubs(exec boil.Executor, insert bool, related ...*Club) error {
+// Uses the global database handle.
+func (o *Organization) AddGroupsG(insert bool, related ...*Group) error {
+	return o.AddGroups(boil.GetDB(), insert, related...)
+}
+
+// AddGroups adds the given related objects to the existing relationships
+// of the organization, optionally inserting them as new records.
+// Appends related to o.R.Groups.
+// Sets related.R.Organization appropriately.
+func (o *Organization) AddGroups(exec boil.Executor, insert bool, related ...*Group) error {
 	var err error
 	for _, rel := range related {
 		if insert {
@@ -607,9 +726,9 @@ func (o *Organization) AddClubs(exec boil.Executor, insert bool, related ...*Clu
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
-				"UPDATE \"club\" SET %s WHERE %s",
+				"UPDATE \"Group\" SET %s WHERE %s",
 				strmangle.SetParamNames("\"", "\"", 1, []string{"organization_id"}),
-				strmangle.WhereClause("\"", "\"", 2, clubPrimaryKeyColumns),
+				strmangle.WhereClause("\"", "\"", 2, groupPrimaryKeyColumns),
 			)
 			values := []interface{}{o.ID, rel.ID}
 
@@ -628,15 +747,15 @@ func (o *Organization) AddClubs(exec boil.Executor, insert bool, related ...*Clu
 
 	if o.R == nil {
 		o.R = &organizationR{
-			Clubs: related,
+			Groups: related,
 		}
 	} else {
-		o.R.Clubs = append(o.R.Clubs, related...)
+		o.R.Groups = append(o.R.Groups, related...)
 	}
 
 	for _, rel := range related {
 		if rel.R == nil {
-			rel.R = &clubR{
+			rel.R = &groupR{
 				Organization: o,
 			}
 		} else {
@@ -646,25 +765,25 @@ func (o *Organization) AddClubs(exec boil.Executor, insert bool, related ...*Clu
 	return nil
 }
 
-// SetClubsG removes all previously related items of the
+// SetGroupsG removes all previously related items of the
 // organization replacing them completely with the passed
 // in related items, optionally inserting them as new records.
-// Sets o.R.Organization's Clubs accordingly.
-// Replaces o.R.Clubs with related.
-// Sets related.R.Organization's Clubs accordingly.
+// Sets o.R.Organization's Groups accordingly.
+// Replaces o.R.Groups with related.
+// Sets related.R.Organization's Groups accordingly.
 // Uses the global database handle.
-func (o *Organization) SetClubsG(insert bool, related ...*Club) error {
-	return o.SetClubs(boil.GetDB(), insert, related...)
+func (o *Organization) SetGroupsG(insert bool, related ...*Group) error {
+	return o.SetGroups(boil.GetDB(), insert, related...)
 }
 
-// SetClubs removes all previously related items of the
+// SetGroups removes all previously related items of the
 // organization replacing them completely with the passed
 // in related items, optionally inserting them as new records.
-// Sets o.R.Organization's Clubs accordingly.
-// Replaces o.R.Clubs with related.
-// Sets related.R.Organization's Clubs accordingly.
-func (o *Organization) SetClubs(exec boil.Executor, insert bool, related ...*Club) error {
-	query := "update \"club\" set \"organization_id\" = null where \"organization_id\" = $1"
+// Sets o.R.Organization's Groups accordingly.
+// Replaces o.R.Groups with related.
+// Sets related.R.Organization's Groups accordingly.
+func (o *Organization) SetGroups(exec boil.Executor, insert bool, related ...*Group) error {
+	query := "update \"Group\" set \"organization_id\" = null where \"organization_id\" = $1"
 	values := []interface{}{o.ID}
 	if boil.DebugMode {
 		fmt.Fprintln(boil.DebugWriter, query)
@@ -677,7 +796,7 @@ func (o *Organization) SetClubs(exec boil.Executor, insert bool, related ...*Clu
 	}
 
 	if o.R != nil {
-		for _, rel := range o.R.Clubs {
+		for _, rel := range o.R.Groups {
 			queries.SetScanner(&rel.OrganizationID, nil)
 			if rel.R == nil {
 				continue
@@ -686,23 +805,23 @@ func (o *Organization) SetClubs(exec boil.Executor, insert bool, related ...*Clu
 			rel.R.Organization = nil
 		}
 
-		o.R.Clubs = nil
+		o.R.Groups = nil
 	}
-	return o.AddClubs(exec, insert, related...)
+	return o.AddGroups(exec, insert, related...)
 }
 
-// RemoveClubsG relationships from objects passed in.
-// Removes related items from R.Clubs (uses pointer comparison, removal does not keep order)
+// RemoveGroupsG relationships from objects passed in.
+// Removes related items from R.Groups (uses pointer comparison, removal does not keep order)
 // Sets related.R.Organization.
 // Uses the global database handle.
-func (o *Organization) RemoveClubsG(related ...*Club) error {
-	return o.RemoveClubs(boil.GetDB(), related...)
+func (o *Organization) RemoveGroupsG(related ...*Group) error {
+	return o.RemoveGroups(boil.GetDB(), related...)
 }
 
-// RemoveClubs relationships from objects passed in.
-// Removes related items from R.Clubs (uses pointer comparison, removal does not keep order)
+// RemoveGroups relationships from objects passed in.
+// Removes related items from R.Groups (uses pointer comparison, removal does not keep order)
 // Sets related.R.Organization.
-func (o *Organization) RemoveClubs(exec boil.Executor, related ...*Club) error {
+func (o *Organization) RemoveGroups(exec boil.Executor, related ...*Group) error {
 	var err error
 	for _, rel := range related {
 		queries.SetScanner(&rel.OrganizationID, nil)
@@ -718,16 +837,16 @@ func (o *Organization) RemoveClubs(exec boil.Executor, related ...*Club) error {
 	}
 
 	for _, rel := range related {
-		for i, ri := range o.R.Clubs {
+		for i, ri := range o.R.Groups {
 			if rel != ri {
 				continue
 			}
 
-			ln := len(o.R.Clubs)
+			ln := len(o.R.Groups)
 			if ln > 1 && i < ln-1 {
-				o.R.Clubs[i] = o.R.Clubs[ln-1]
+				o.R.Groups[i] = o.R.Groups[ln-1]
 			}
-			o.R.Clubs = o.R.Clubs[:ln-1]
+			o.R.Groups = o.R.Groups[:ln-1]
 			break
 		}
 	}
@@ -879,6 +998,157 @@ func (o *Organization) RemoveOrganizationAuths(exec boil.Executor, related ...*O
 				o.R.OrganizationAuths[i] = o.R.OrganizationAuths[ln-1]
 			}
 			o.R.OrganizationAuths = o.R.OrganizationAuths[:ln-1]
+			break
+		}
+	}
+
+	return nil
+}
+
+// AddRowersG adds the given related objects to the existing relationships
+// of the organization, optionally inserting them as new records.
+// Appends related to o.R.Rowers.
+// Sets related.R.Organization appropriately.
+// Uses the global database handle.
+func (o *Organization) AddRowersG(insert bool, related ...*Rower) error {
+	return o.AddRowers(boil.GetDB(), insert, related...)
+}
+
+// AddRowers adds the given related objects to the existing relationships
+// of the organization, optionally inserting them as new records.
+// Appends related to o.R.Rowers.
+// Sets related.R.Organization appropriately.
+func (o *Organization) AddRowers(exec boil.Executor, insert bool, related ...*Rower) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			queries.Assign(&rel.OrganizationID, o.ID)
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"rower\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"organization_id"}),
+				strmangle.WhereClause("\"", "\"", 2, rowerPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			queries.Assign(&rel.OrganizationID, o.ID)
+		}
+	}
+
+	if o.R == nil {
+		o.R = &organizationR{
+			Rowers: related,
+		}
+	} else {
+		o.R.Rowers = append(o.R.Rowers, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &rowerR{
+				Organization: o,
+			}
+		} else {
+			rel.R.Organization = o
+		}
+	}
+	return nil
+}
+
+// SetRowersG removes all previously related items of the
+// organization replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Organization's Rowers accordingly.
+// Replaces o.R.Rowers with related.
+// Sets related.R.Organization's Rowers accordingly.
+// Uses the global database handle.
+func (o *Organization) SetRowersG(insert bool, related ...*Rower) error {
+	return o.SetRowers(boil.GetDB(), insert, related...)
+}
+
+// SetRowers removes all previously related items of the
+// organization replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Organization's Rowers accordingly.
+// Replaces o.R.Rowers with related.
+// Sets related.R.Organization's Rowers accordingly.
+func (o *Organization) SetRowers(exec boil.Executor, insert bool, related ...*Rower) error {
+	query := "update \"rower\" set \"organization_id\" = null where \"organization_id\" = $1"
+	values := []interface{}{o.ID}
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, query)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+
+	_, err := exec.Exec(query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	if o.R != nil {
+		for _, rel := range o.R.Rowers {
+			queries.SetScanner(&rel.OrganizationID, nil)
+			if rel.R == nil {
+				continue
+			}
+
+			rel.R.Organization = nil
+		}
+
+		o.R.Rowers = nil
+	}
+	return o.AddRowers(exec, insert, related...)
+}
+
+// RemoveRowersG relationships from objects passed in.
+// Removes related items from R.Rowers (uses pointer comparison, removal does not keep order)
+// Sets related.R.Organization.
+// Uses the global database handle.
+func (o *Organization) RemoveRowersG(related ...*Rower) error {
+	return o.RemoveRowers(boil.GetDB(), related...)
+}
+
+// RemoveRowers relationships from objects passed in.
+// Removes related items from R.Rowers (uses pointer comparison, removal does not keep order)
+// Sets related.R.Organization.
+func (o *Organization) RemoveRowers(exec boil.Executor, related ...*Rower) error {
+	var err error
+	for _, rel := range related {
+		queries.SetScanner(&rel.OrganizationID, nil)
+		if rel.R != nil {
+			rel.R.Organization = nil
+		}
+		if _, err = rel.Update(exec, boil.Whitelist("organization_id")); err != nil {
+			return err
+		}
+	}
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.Rowers {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.Rowers)
+			if ln > 1 && i < ln-1 {
+				o.R.Rowers[i] = o.R.Rowers[ln-1]
+			}
+			o.R.Rowers = o.R.Rowers[:ln-1]
 			break
 		}
 	}

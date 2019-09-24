@@ -25,8 +25,35 @@ func GetGroupsByClub(context *gin.Context) {
 		} else {
 			UnexpectedError(context, err)
 		}
+		return
 	}
-	Ok(context, groups)
+	Ok(context, domain.GroupSlice{
+		GroupSlice: groups,
+	})
+}
+
+func GetGroupsByCurrentOrganization(context *gin.Context) {
+	database := middleware.GetDatabase(context)
+	services := middleware.GetServices(context)
+
+	orgID, err := getCurrentOrganizationID(context)
+	if err != nil {
+		BadRequest(context, err.Error())
+		return
+	}
+
+	groups, err := services.GetGroupsByOrganization(database, orgID)
+	if err != nil {
+		if _, ok := err.(domain.AppError); ok {
+			BadRequest(context, err.Error())
+		} else {
+			UnexpectedError(context, err)
+		}
+		return
+	}
+	Ok(context, domain.GroupSlice{
+		GroupSlice: groups,
+	})
 }
 
 func GetGroupByID(context *gin.Context) {
@@ -46,9 +73,9 @@ func GetGroupByID(context *gin.Context) {
 		} else {
 			UnexpectedError(context, err)
 		}
-	} else {
-		Ok(context, org)
+		return
 	}
+	Ok(context, org)
 }
 
 func CreateGroup(context *gin.Context) {
@@ -69,9 +96,9 @@ func CreateGroup(context *gin.Context) {
 		} else {
 			UnexpectedError(context, err)
 		}
-	} else {
-		Created(context, group)
+		return
 	}
+	Created(context, group)
 }
 
 func UpdateGroup(context *gin.Context) {
@@ -92,7 +119,7 @@ func UpdateGroup(context *gin.Context) {
 		} else {
 			UnexpectedError(context, err)
 		}
-	} else {
-		Ok(context, group)
+		return
 	}
+	Ok(context, group)
 }

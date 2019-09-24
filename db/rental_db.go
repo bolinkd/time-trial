@@ -25,9 +25,11 @@ func (conn Connection) FindRentals(tx boil.Executor, orgID int, isActive bool, s
 
 	queries := []qm.QueryMod{
 		qm.InnerJoin("shell s on rental.shell_id = s.id"),
-		qm.InnerJoin("club c on s.club_id = c.id"),
-		qm.InnerJoin("organization o on c.organization_id = o.id"),
+		qm.InnerJoin(`"Group" g on s.group_id = g.id`),
+		qm.InnerJoin("organization o on g.organization_id = o.id"),
 		qm.Where("o.id = ?", orgID),
+		qm.Load(models.RentalRels.Shell),
+		qm.Load(models.RentalRels.RentalRowers),
 	}
 
 	if isActive {

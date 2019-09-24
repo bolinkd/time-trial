@@ -23,64 +23,67 @@ import (
 
 // Rower is an object representing the database table.
 type Rower struct {
-	ID        int         `boil:"id" json:"id" toml:"id" yaml:"id"`
-	FirstName null.String `boil:"first_name" json:"first_name,omitempty" toml:"first_name" yaml:"first_name,omitempty"`
-	LastName  null.String `boil:"last_name" json:"last_name,omitempty" toml:"last_name" yaml:"last_name,omitempty"`
-	GroupID   null.Int    `boil:"group_id" json:"group_id,omitempty" toml:"group_id" yaml:"group_id,omitempty"`
-	CreatedAt time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID             int         `boil:"id" json:"id" toml:"id" yaml:"id"`
+	FirstName      null.String `boil:"first_name" json:"first_name,omitempty" toml:"first_name" yaml:"first_name,omitempty"`
+	LastName       null.String `boil:"last_name" json:"last_name,omitempty" toml:"last_name" yaml:"last_name,omitempty"`
+	CreatedAt      time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt      time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	OrganizationID null.Int    `boil:"organization_id" json:"organization_id,omitempty" toml:"organization_id" yaml:"organization_id,omitempty"`
 
 	R *rowerR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L rowerL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var RowerColumns = struct {
-	ID        string
-	FirstName string
-	LastName  string
-	GroupID   string
-	CreatedAt string
-	UpdatedAt string
+	ID             string
+	FirstName      string
+	LastName       string
+	CreatedAt      string
+	UpdatedAt      string
+	OrganizationID string
 }{
-	ID:        "id",
-	FirstName: "first_name",
-	LastName:  "last_name",
-	GroupID:   "group_id",
-	CreatedAt: "created_at",
-	UpdatedAt: "updated_at",
+	ID:             "id",
+	FirstName:      "first_name",
+	LastName:       "last_name",
+	CreatedAt:      "created_at",
+	UpdatedAt:      "updated_at",
+	OrganizationID: "organization_id",
 }
 
 // Generated where
 
 var RowerWhere = struct {
-	ID        whereHelperint
-	FirstName whereHelpernull_String
-	LastName  whereHelpernull_String
-	GroupID   whereHelpernull_Int
-	CreatedAt whereHelpertime_Time
-	UpdatedAt whereHelpertime_Time
+	ID             whereHelperint
+	FirstName      whereHelpernull_String
+	LastName       whereHelpernull_String
+	CreatedAt      whereHelpertime_Time
+	UpdatedAt      whereHelpertime_Time
+	OrganizationID whereHelpernull_Int
 }{
-	ID:        whereHelperint{field: `id`},
-	FirstName: whereHelpernull_String{field: `first_name`},
-	LastName:  whereHelpernull_String{field: `last_name`},
-	GroupID:   whereHelpernull_Int{field: `group_id`},
-	CreatedAt: whereHelpertime_Time{field: `created_at`},
-	UpdatedAt: whereHelpertime_Time{field: `updated_at`},
+	ID:             whereHelperint{field: `id`},
+	FirstName:      whereHelpernull_String{field: `first_name`},
+	LastName:       whereHelpernull_String{field: `last_name`},
+	CreatedAt:      whereHelpertime_Time{field: `created_at`},
+	UpdatedAt:      whereHelpertime_Time{field: `updated_at`},
+	OrganizationID: whereHelpernull_Int{field: `organization_id`},
 }
 
 // RowerRels is where relationship names are stored.
 var RowerRels = struct {
-	Group        string
+	Organization string
 	RentalRowers string
+	RowerGroups  string
 }{
-	Group:        "Group",
+	Organization: "Organization",
 	RentalRowers: "RentalRowers",
+	RowerGroups:  "RowerGroups",
 }
 
 // rowerR is where relationships are stored.
 type rowerR struct {
-	Group        *Group
+	Organization *Organization
 	RentalRowers RentalRowerSlice
+	RowerGroups  RowerGroupSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -92,8 +95,8 @@ func (*rowerR) NewStruct() *rowerR {
 type rowerL struct{}
 
 var (
-	rowerColumns               = []string{"id", "first_name", "last_name", "group_id", "created_at", "updated_at"}
-	rowerColumnsWithoutDefault = []string{"first_name", "last_name", "group_id", "created_at", "updated_at"}
+	rowerColumns               = []string{"id", "first_name", "last_name", "created_at", "updated_at", "organization_id"}
+	rowerColumnsWithoutDefault = []string{"first_name", "last_name", "created_at", "updated_at", "organization_id"}
 	rowerColumnsWithDefault    = []string{"id"}
 	rowerPrimaryKeyColumns     = []string{"id"}
 )
@@ -357,16 +360,16 @@ func (q rowerQuery) Exists(exec boil.Executor) (bool, error) {
 	return count > 0, nil
 }
 
-// Group pointed to by the foreign key.
-func (o *Rower) Group(mods ...qm.QueryMod) groupQuery {
+// Organization pointed to by the foreign key.
+func (o *Rower) Organization(mods ...qm.QueryMod) organizationQuery {
 	queryMods := []qm.QueryMod{
-		qm.Where("id=?", o.GroupID),
+		qm.Where("id=?", o.OrganizationID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	query := Groups(queryMods...)
-	queries.SetFrom(query.Query, "\"Group\"")
+	query := Organizations(queryMods...)
+	queries.SetFrom(query.Query, "\"organization\"")
 
 	return query
 }
@@ -392,9 +395,30 @@ func (o *Rower) RentalRowers(mods ...qm.QueryMod) rentalRowerQuery {
 	return query
 }
 
-// LoadGroup allows an eager lookup of values, cached into the
+// RowerGroups retrieves all the rower_group's RowerGroups with an executor.
+func (o *Rower) RowerGroups(mods ...qm.QueryMod) rowerGroupQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.Where("\"rower_group\".\"rower_id\"=?", o.ID),
+	)
+
+	query := RowerGroups(queryMods...)
+	queries.SetFrom(query.Query, "\"rower_group\"")
+
+	if len(queries.GetSelect(query.Query)) == 0 {
+		queries.SetSelect(query.Query, []string{"\"rower_group\".*"})
+	}
+
+	return query
+}
+
+// LoadOrganization allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (rowerL) LoadGroup(e boil.Executor, singular bool, maybeRower interface{}, mods queries.Applicator) error {
+func (rowerL) LoadOrganization(e boil.Executor, singular bool, maybeRower interface{}, mods queries.Applicator) error {
 	var slice []*Rower
 	var object *Rower
 
@@ -409,8 +433,8 @@ func (rowerL) LoadGroup(e boil.Executor, singular bool, maybeRower interface{}, 
 		if object.R == nil {
 			object.R = &rowerR{}
 		}
-		if !queries.IsNil(object.GroupID) {
-			args = append(args, object.GroupID)
+		if !queries.IsNil(object.OrganizationID) {
+			args = append(args, object.OrganizationID)
 		}
 
 	} else {
@@ -421,13 +445,13 @@ func (rowerL) LoadGroup(e boil.Executor, singular bool, maybeRower interface{}, 
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.GroupID) {
+				if queries.Equal(a, obj.OrganizationID) {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.GroupID) {
-				args = append(args, obj.GroupID)
+			if !queries.IsNil(obj.OrganizationID) {
+				args = append(args, obj.OrganizationID)
 			}
 
 		}
@@ -437,26 +461,26 @@ func (rowerL) LoadGroup(e boil.Executor, singular bool, maybeRower interface{}, 
 		return nil
 	}
 
-	query := NewQuery(qm.From(`Group`), qm.WhereIn(`id in ?`, args...))
+	query := NewQuery(qm.From(`organization`), qm.WhereIn(`id in ?`, args...))
 	if mods != nil {
 		mods.Apply(query)
 	}
 
 	results, err := query.Query(e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load Group")
+		return errors.Wrap(err, "failed to eager load Organization")
 	}
 
-	var resultSlice []*Group
+	var resultSlice []*Organization
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Group")
+		return errors.Wrap(err, "failed to bind eager loaded slice Organization")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for Group")
+		return errors.Wrap(err, "failed to close results of eager load for organization")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for Group")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for organization")
 	}
 
 	if len(rowerAfterSelectHooks) != 0 {
@@ -473,22 +497,22 @@ func (rowerL) LoadGroup(e boil.Executor, singular bool, maybeRower interface{}, 
 
 	if singular {
 		foreign := resultSlice[0]
-		object.R.Group = foreign
+		object.R.Organization = foreign
 		if foreign.R == nil {
-			foreign.R = &groupR{}
+			foreign.R = &organizationR{}
 		}
-		foreign.R.GroupRowers = append(foreign.R.GroupRowers, object)
+		foreign.R.Rowers = append(foreign.R.Rowers, object)
 		return nil
 	}
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.GroupID, foreign.ID) {
-				local.R.Group = foreign
+			if queries.Equal(local.OrganizationID, foreign.ID) {
+				local.R.Organization = foreign
 				if foreign.R == nil {
-					foreign.R = &groupR{}
+					foreign.R = &organizationR{}
 				}
-				foreign.R.GroupRowers = append(foreign.R.GroupRowers, local)
+				foreign.R.Rowers = append(foreign.R.Rowers, local)
 				break
 			}
 		}
@@ -592,18 +616,113 @@ func (rowerL) LoadRentalRowers(e boil.Executor, singular bool, maybeRower interf
 	return nil
 }
 
-// SetGroupG of the rower to the related item.
-// Sets o.R.Group to related.
-// Adds o to related.R.GroupRowers.
-// Uses the global database handle.
-func (o *Rower) SetGroupG(insert bool, related *Group) error {
-	return o.SetGroup(boil.GetDB(), insert, related)
+// LoadRowerGroups allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (rowerL) LoadRowerGroups(e boil.Executor, singular bool, maybeRower interface{}, mods queries.Applicator) error {
+	var slice []*Rower
+	var object *Rower
+
+	if singular {
+		object = maybeRower.(*Rower)
+	} else {
+		slice = *maybeRower.(*[]*Rower)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &rowerR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &rowerR{}
+			}
+
+			for _, a := range args {
+				if queries.Equal(a, obj.ID) {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(qm.From(`rower_group`), qm.WhereIn(`rower_id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.Query(e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load rower_group")
+	}
+
+	var resultSlice []*RowerGroup
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice rower_group")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on rower_group")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for rower_group")
+	}
+
+	if len(rowerGroupAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.RowerGroups = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &rowerGroupR{}
+			}
+			foreign.R.Rower = object
+		}
+		return nil
+	}
+
+	for _, foreign := range resultSlice {
+		for _, local := range slice {
+			if queries.Equal(local.ID, foreign.RowerID) {
+				local.R.RowerGroups = append(local.R.RowerGroups, foreign)
+				if foreign.R == nil {
+					foreign.R = &rowerGroupR{}
+				}
+				foreign.R.Rower = local
+				break
+			}
+		}
+	}
+
+	return nil
 }
 
-// SetGroup of the rower to the related item.
-// Sets o.R.Group to related.
-// Adds o to related.R.GroupRowers.
-func (o *Rower) SetGroup(exec boil.Executor, insert bool, related *Group) error {
+// SetOrganizationG of the rower to the related item.
+// Sets o.R.Organization to related.
+// Adds o to related.R.Rowers.
+// Uses the global database handle.
+func (o *Rower) SetOrganizationG(insert bool, related *Organization) error {
+	return o.SetOrganization(boil.GetDB(), insert, related)
+}
+
+// SetOrganization of the rower to the related item.
+// Sets o.R.Organization to related.
+// Adds o to related.R.Rowers.
+func (o *Rower) SetOrganization(exec boil.Executor, insert bool, related *Organization) error {
 	var err error
 	if insert {
 		if err = related.Insert(exec, boil.Infer()); err != nil {
@@ -613,7 +732,7 @@ func (o *Rower) SetGroup(exec boil.Executor, insert bool, related *Group) error 
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"rower\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"group_id"}),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"organization_id"}),
 		strmangle.WhereClause("\"", "\"", 2, rowerPrimaryKeyColumns),
 	)
 	values := []interface{}{related.ID, o.ID}
@@ -627,60 +746,60 @@ func (o *Rower) SetGroup(exec boil.Executor, insert bool, related *Group) error 
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.GroupID, related.ID)
+	queries.Assign(&o.OrganizationID, related.ID)
 	if o.R == nil {
 		o.R = &rowerR{
-			Group: related,
+			Organization: related,
 		}
 	} else {
-		o.R.Group = related
+		o.R.Organization = related
 	}
 
 	if related.R == nil {
-		related.R = &groupR{
-			GroupRowers: RowerSlice{o},
+		related.R = &organizationR{
+			Rowers: RowerSlice{o},
 		}
 	} else {
-		related.R.GroupRowers = append(related.R.GroupRowers, o)
+		related.R.Rowers = append(related.R.Rowers, o)
 	}
 
 	return nil
 }
 
-// RemoveGroupG relationship.
-// Sets o.R.Group to nil.
+// RemoveOrganizationG relationship.
+// Sets o.R.Organization to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
 // Uses the global database handle.
-func (o *Rower) RemoveGroupG(related *Group) error {
-	return o.RemoveGroup(boil.GetDB(), related)
+func (o *Rower) RemoveOrganizationG(related *Organization) error {
+	return o.RemoveOrganization(boil.GetDB(), related)
 }
 
-// RemoveGroup relationship.
-// Sets o.R.Group to nil.
+// RemoveOrganization relationship.
+// Sets o.R.Organization to nil.
 // Removes o from all passed in related items' relationships struct (Optional).
-func (o *Rower) RemoveGroup(exec boil.Executor, related *Group) error {
+func (o *Rower) RemoveOrganization(exec boil.Executor, related *Organization) error {
 	var err error
 
-	queries.SetScanner(&o.GroupID, nil)
-	if _, err = o.Update(exec, boil.Whitelist("group_id")); err != nil {
+	queries.SetScanner(&o.OrganizationID, nil)
+	if _, err = o.Update(exec, boil.Whitelist("organization_id")); err != nil {
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	o.R.Group = nil
+	o.R.Organization = nil
 	if related == nil || related.R == nil {
 		return nil
 	}
 
-	for i, ri := range related.R.GroupRowers {
-		if queries.Equal(o.GroupID, ri.GroupID) {
+	for i, ri := range related.R.Rowers {
+		if queries.Equal(o.OrganizationID, ri.OrganizationID) {
 			continue
 		}
 
-		ln := len(related.R.GroupRowers)
+		ln := len(related.R.Rowers)
 		if ln > 1 && i < ln-1 {
-			related.R.GroupRowers[i] = related.R.GroupRowers[ln-1]
+			related.R.Rowers[i] = related.R.Rowers[ln-1]
 		}
-		related.R.GroupRowers = related.R.GroupRowers[:ln-1]
+		related.R.Rowers = related.R.Rowers[:ln-1]
 		break
 	}
 	return nil
@@ -830,6 +949,157 @@ func (o *Rower) RemoveRentalRowers(exec boil.Executor, related ...*RentalRower) 
 				o.R.RentalRowers[i] = o.R.RentalRowers[ln-1]
 			}
 			o.R.RentalRowers = o.R.RentalRowers[:ln-1]
+			break
+		}
+	}
+
+	return nil
+}
+
+// AddRowerGroupsG adds the given related objects to the existing relationships
+// of the rower, optionally inserting them as new records.
+// Appends related to o.R.RowerGroups.
+// Sets related.R.Rower appropriately.
+// Uses the global database handle.
+func (o *Rower) AddRowerGroupsG(insert bool, related ...*RowerGroup) error {
+	return o.AddRowerGroups(boil.GetDB(), insert, related...)
+}
+
+// AddRowerGroups adds the given related objects to the existing relationships
+// of the rower, optionally inserting them as new records.
+// Appends related to o.R.RowerGroups.
+// Sets related.R.Rower appropriately.
+func (o *Rower) AddRowerGroups(exec boil.Executor, insert bool, related ...*RowerGroup) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			queries.Assign(&rel.RowerID, o.ID)
+			if err = rel.Insert(exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"rower_group\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 1, []string{"rower_id"}),
+				strmangle.WhereClause("\"", "\"", 2, rowerGroupPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.Exec(updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			queries.Assign(&rel.RowerID, o.ID)
+		}
+	}
+
+	if o.R == nil {
+		o.R = &rowerR{
+			RowerGroups: related,
+		}
+	} else {
+		o.R.RowerGroups = append(o.R.RowerGroups, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &rowerGroupR{
+				Rower: o,
+			}
+		} else {
+			rel.R.Rower = o
+		}
+	}
+	return nil
+}
+
+// SetRowerGroupsG removes all previously related items of the
+// rower replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Rower's RowerGroups accordingly.
+// Replaces o.R.RowerGroups with related.
+// Sets related.R.Rower's RowerGroups accordingly.
+// Uses the global database handle.
+func (o *Rower) SetRowerGroupsG(insert bool, related ...*RowerGroup) error {
+	return o.SetRowerGroups(boil.GetDB(), insert, related...)
+}
+
+// SetRowerGroups removes all previously related items of the
+// rower replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Rower's RowerGroups accordingly.
+// Replaces o.R.RowerGroups with related.
+// Sets related.R.Rower's RowerGroups accordingly.
+func (o *Rower) SetRowerGroups(exec boil.Executor, insert bool, related ...*RowerGroup) error {
+	query := "update \"rower_group\" set \"rower_id\" = null where \"rower_id\" = $1"
+	values := []interface{}{o.ID}
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, query)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+
+	_, err := exec.Exec(query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	if o.R != nil {
+		for _, rel := range o.R.RowerGroups {
+			queries.SetScanner(&rel.RowerID, nil)
+			if rel.R == nil {
+				continue
+			}
+
+			rel.R.Rower = nil
+		}
+
+		o.R.RowerGroups = nil
+	}
+	return o.AddRowerGroups(exec, insert, related...)
+}
+
+// RemoveRowerGroupsG relationships from objects passed in.
+// Removes related items from R.RowerGroups (uses pointer comparison, removal does not keep order)
+// Sets related.R.Rower.
+// Uses the global database handle.
+func (o *Rower) RemoveRowerGroupsG(related ...*RowerGroup) error {
+	return o.RemoveRowerGroups(boil.GetDB(), related...)
+}
+
+// RemoveRowerGroups relationships from objects passed in.
+// Removes related items from R.RowerGroups (uses pointer comparison, removal does not keep order)
+// Sets related.R.Rower.
+func (o *Rower) RemoveRowerGroups(exec boil.Executor, related ...*RowerGroup) error {
+	var err error
+	for _, rel := range related {
+		queries.SetScanner(&rel.RowerID, nil)
+		if rel.R != nil {
+			rel.R.Rower = nil
+		}
+		if _, err = rel.Update(exec, boil.Whitelist("rower_id")); err != nil {
+			return err
+		}
+	}
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.RowerGroups {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.RowerGroups)
+			if ln > 1 && i < ln-1 {
+				o.R.RowerGroups[i] = o.R.RowerGroups[ln-1]
+			}
+			o.R.RowerGroups = o.R.RowerGroups[:ln-1]
 			break
 		}
 	}

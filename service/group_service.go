@@ -8,10 +8,15 @@ import (
 )
 
 type GroupServiceInterface interface {
+	GetGroupsByOrganization(db db.DatabaseInterface, orgID int) (models.GroupSlice, error)
 	GetGroupsByClub(db db.DatabaseInterface, clubID int) (models.GroupSlice, error)
 	GetGroupByID(db db.DatabaseInterface, id int) (*models.Group, error)
 	CreateGroup(db db.DatabaseInterface, group *models.Group) error
 	UpdateGroup(db db.DatabaseInterface, group *models.Group) error
+}
+
+func (Services) GetGroupsByOrganization(db db.DatabaseInterface, orgID int) (models.GroupSlice, error) {
+	return db.FindGroupsByOrganizationID(nil, orgID)
 }
 
 func (Services) GetGroupsByClub(db db.DatabaseInterface, clubID int) (models.GroupSlice, error) {

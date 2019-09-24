@@ -9,6 +9,7 @@ import (
 
 type GroupDBInterface interface {
 	FindGroups(tx boil.Executor) (models.GroupSlice, error)
+	FindGroupsByOrganizationID(tx boil.Executor, orgID int) (models.GroupSlice, error)
 	FindGroupsByClubID(tx boil.Executor, clubID int) (models.GroupSlice, error)
 	FindGroupByID(tx boil.Executor, id int) (*models.Group, error)
 	AddGroup(tx boil.Executor, group *models.Group) error
@@ -20,6 +21,18 @@ func (conn Connection) FindGroups(tx boil.Executor) (models.GroupSlice, error) {
 		tx = conn.DB
 	}
 	return models.Groups().All(tx)
+}
+
+func (conn Connection) FindGroupsByOrganizationID(tx boil.Executor, orgID int) (models.GroupSlice, error) {
+	if tx == nil {
+		tx = conn.DB
+	}
+
+	queries := []qm.QueryMod{
+		qm.InnerJoin(`organization o on "Group".organization_id = o.id`),
+		qm.Where("o.id = ?", orgID),
+	}
+	return models.Groups(queries...).All(tx)
 }
 
 func (conn Connection) FindGroupsByClubID(tx boil.Executor, clubID int) (models.GroupSlice, error) {
