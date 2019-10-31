@@ -2,19 +2,20 @@ package handlers
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/bolinkd/time-trial/domain"
 	"github.com/bolinkd/time-trial/middleware"
 	"github.com/bolinkd/time-trial/socket"
 	"github.com/bolinkd/time-trial/socket/model"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 func GetTimeTrials(context *gin.Context) {
 	database := middleware.GetDatabase(context)
 	services := middleware.GetServices(context)
 
-	user, err := services.GetTimeTrials(database)
+	timeTrials, err := services.GetTimeTrials(database)
 	if err != nil {
 		if _, ok := err.(domain.AppError); ok {
 			BadRequest(context, err.Error())
@@ -22,7 +23,7 @@ func GetTimeTrials(context *gin.Context) {
 			UnexpectedError(context, err)
 		}
 	} else {
-		Ok(context, user)
+		Ok(context, &domain.TimeTrialSlice{timeTrials})
 	}
 }
 
@@ -44,7 +45,8 @@ func GetTimeTrialById(context *gin.Context) {
 			UnexpectedError(context, err)
 		}
 	} else {
-		Ok(context, timeTrial)
+		fmt.Println(timeTrial.R.Boats)
+		Ok(context, &domain.TimeTrial{timeTrial})
 	}
 }
 

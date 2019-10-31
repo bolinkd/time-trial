@@ -18,14 +18,14 @@ func (conn Connection) FindTimeTrials(tx boil.Executor) (models.TimeTrialSlice, 
 	if tx == nil {
 		tx = conn.DB
 	}
-	return models.TimeTrials(qm.Load("Boats")).All(tx)
+	return models.TimeTrials(qm.Load(models.TimeTrialRels.Boats)).All(tx)
 }
 
 func (conn Connection) FindTimeTrialByID(id int, tx boil.Executor) (*models.TimeTrial, error) {
 	if tx == nil {
 		tx = conn.DB
 	}
-	return models.TimeTrials(qm.Where("id = ?", id), qm.Load("Boats")).One(tx)
+	return models.TimeTrials(qm.Where("id = ?", id), qm.Load(models.TimeTrialRels.Boats)).One(tx)
 }
 
 func (conn Connection) AddTimeTrial(timeTrial *models.TimeTrial, tx boil.Executor) error {

@@ -3,6 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+
 	"github.com/bolinkd/time-trial/db"
 	"github.com/bolinkd/time-trial/handlers"
 	"github.com/bolinkd/time-trial/middleware"
@@ -11,9 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"github.com/volatiletech/sqlboiler/boil"
-	"net/http"
-	"os"
-	"os/signal"
 )
 
 var flagPort = flag.String("port", "8080", "Server port")

@@ -3,6 +3,8 @@ package domain
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+
 	"github.com/bolinkd/time-trial/models"
 )
 
@@ -34,6 +36,7 @@ func (tt TimeTrial) Validate() error {
 }
 
 func (tt *TimeTrial) MarshalJSON() ([]byte, error) {
+	fmt.Println(tt.R)
 	if tt.R == nil {
 		return json.Marshal(tt.TimeTrial)
 	}
