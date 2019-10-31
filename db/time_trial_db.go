@@ -39,13 +39,6 @@ func (conn Connection) UpdateTimeTrial(timeTrial *models.TimeTrial, tx boil.Exec
 	if tx == nil {
 		tx = conn.DB
 	}
-	rowsAff, err := timeTrial.Update(tx, boil.Infer())
-	if err != nil {
-		return err
-	}
-
-	if rowsAff != 0 {
-		return domain.ErrTimeTrialNotFound
-	}
+	_, err := timeTrial.Update(tx, boil.Infer())
 	return err
 }

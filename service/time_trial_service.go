@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+
 	"github.com/bolinkd/time-trial/db"
 	"github.com/bolinkd/time-trial/domain"
 	"github.com/bolinkd/time-trial/models"
@@ -32,6 +33,13 @@ func (Services) CreateTimeTrial(db db.DatabaseInterface, timeTrial *models.TimeT
 	return db.AddTimeTrial(timeTrial, nil)
 }
 
-func (Services) UpdateTimeTrial(db db.DatabaseInterface, timeTrial *models.TimeTrial) error {
+func (s Services) UpdateTimeTrial(db db.DatabaseInterface, timeTrial *models.TimeTrial) error {
+	timeTrial, err := db.FindTimeTrialByID(timeTrial.ID, nil)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return domain.ErrTimeTrialNotFound
+		}
+		return err
+	}
 	return db.UpdateTimeTrial(timeTrial, nil)
 }
